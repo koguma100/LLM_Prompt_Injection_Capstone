@@ -12,22 +12,16 @@ nltk.download('punkt_tab')
 nltk.download('averaged_perceptron_tagger_eng')
 
 
-PROMPT_INJECTION_PATTERNS = [
-    r'(ignore|disrefgard) (all )?(previous|prior) instructions',
-    r'disregard (the )?system prompt',
-    r'pretend to be',
-    r'from now on',
-    r'reveal (the )?(system|hidden) prompt',
-    r'\b(rm|chmod|chown|sudo|bash|sh|nc|netcat|scp|ssh)\b'
-]
-
 # search for regex patterns matches in the list above.
 def regex_scan(text):
     flags = []
-    for pattern in PROMPT_INJECTION_PATTERNS:
-        if re.search(pattern, text, re.IGNORECASE):
-            flags.append(pattern)
+    for pattern in Data.PROMPT_INJECTION_PATTERNS:
+        if re.search(pattern, text, re):
+            flags.append(text)
     return flags
+
+def imperative_scan(text):
+    pass
 
 # separate sentences, tokens, and part of speech tags
 def preprocess(text):
@@ -36,31 +30,36 @@ def preprocess(text):
     pos_tags = nltk.pos_tag(tokens)
     return sentences, tokens, pos_tags
 
+class Parse:
+    sentences = []
+    tokens = []
+    pos_tags = []
+    regex_flags = []
 
 if __name__ == "__main__":
     injections = Data.prompt_injections
     benigns = Data.bengin_instructions
+    Injections_Parse = Parse()
+    Benign_Parse = Parse()
 
-    benign_parsed = []
-    injections_parsed = []
-    regex_prompt_injections = []
-    regex_benign = []
+    for line in injections:
+        sentences, tokens, pos_tags = preprocess(line)
+        Injections_Parse.sentences.extend(sentences)
 
-    for line in Data.prompt_injections:
-        processed = preprocess(line)
-        regex_prompt_injections.append(regex_scan(line))
-        injections_parsed.append(processed)
-                                                                 
-    for line in Data.bengin_instructions:
-        processed = preprocess(line)
-        regex_benign.append(regex_scan(line))
-        benign_parsed.append(processed)
+    for line in benigns:
+        sentences, tokens, pos_tags = preprocess(line)
+        Benign_Parse.sentences.extend(sentences)
 
-   # print(injections_parsed)
-    #print("\n")
-    #print(benign_parsed)
-    print("\n")
-    print("Number of pattern matches for prompt injections:", len(regex_prompt_injections))
-    print("Number of pattern matches for benign instructions:", len(regex_benign))
+    for sentence in Injections_Parse.sentences:
+        print(sentence)
+        Injections_Parse.regex_flags.append(regex_scan(sentence))
+
+    for sentence in Benign_Parse.sentences:
+        print(sentence)
+        Benign_Parse.regex_flags.append(regex_scan(sentence))
 
 
+    print("Number of pattern matches for prompt injections:", len(Injections_Parse.regex_flags))
+    print("Number of pattern matches for benign instructions:", len(Benign_Parse.regex_flags))
+
+    print(Injections_Parse.regex_flags)
