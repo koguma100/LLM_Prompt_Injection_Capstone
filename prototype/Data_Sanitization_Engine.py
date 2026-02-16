@@ -17,7 +17,7 @@ def main():
         # Detector.place_tags(detected_base64)
         # print(Detector.prompt)
 
-        detected_instruction_overrides = Detector.regex_scanner(patterns.OVERRIDE_PATTERN)
+        detected_instruction_overrides = Detector.regex_scanner(patterns.INSTRUCTION_OVERRIDE_PATTERN)
         print("instruction overrides:", detected_instruction_overrides)
         Detector.place_tags(detected_instruction_overrides)
 
