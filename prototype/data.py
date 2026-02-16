@@ -25,7 +25,7 @@ class Patterns:
         r'i am (the |your )?(system administrator|sudo|root|admin|superuser)'
         r'|you are (talking to|speaking with) (the |your )?(system admin|sudo|root|admin|superuser)'
         r'|(system admin|sudo|root|admin|superuser) (speaking|here|talking)'
-        r'|.*(show me|i order you|print|tell me)',
+        r'|.*(Show me|i order you|print|tell me)',
         re.IGNORECASE
     )
 
