@@ -25,14 +25,13 @@ class Patterns:
         r'i am (the |your )?(system administrator|sudo|root|admin|superuser)'
         r'|you are (talking to|speaking with) (the |your )?(system admin|sudo|root|admin|superuser)'
         r'|(system admin|sudo|root|admin|superuser) (speaking|here|talking)'
-        r'|.*(Show me|i order you|print|tell me)',
+        r'|(Show me|i order you|print|tell me)',
         re.IGNORECASE
     )
 
     # regular expression for Base 64
     BASE_64_PATTERN = re.compile(
-        r'\b(?:[A-Za-z0-9+/]{4})+'
-        r'(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?\b'
+         r'[A-Za-z0-9+/]{20,}={0,2}'
     )
 
 
