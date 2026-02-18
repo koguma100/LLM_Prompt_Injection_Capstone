@@ -1,3 +1,10 @@
+# to run as python3 Data_sanitization_engine.py, add a dataset to data.py as an element of the Prompts class.
+# performs full processing plus data results.
+
+# Pulling from Hugging face: create a .sql file like the existing query.sql, then do duckdb < query.sql to create a csv of the query results.
+# then run import utils to use the csv to python list function (I've been copying data from this output into data.py,
+# so another task could be automating this into a function).
+
 from prototype import data, detect, sanitize
 from prototype.detect import Detect
 from prototype.sanitize import Sanitize
