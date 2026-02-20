@@ -1,6 +1,5 @@
 from scipy.stats import entropy
 from collections import Counter
-import string
 import numpy as np
 import csv
 
