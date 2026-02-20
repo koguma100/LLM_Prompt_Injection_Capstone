@@ -106,12 +106,14 @@
         </form>
 
         {% if response %}
-            <label>Response</label>
+            <label>Response with template</label>
             <div class="response-box">{{ response.message.content }}</div>
+            <label>Response without template</label>
+            <div class="response-box">{{ response2.message.content }}</div>
         {% endif %}
 
         <div class="footer">
-            Flask Prompt Testing Interface
+            Current model: {{ model  }}
         </div>
     </div>
 
