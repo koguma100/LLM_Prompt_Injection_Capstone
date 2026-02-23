@@ -19,6 +19,7 @@ model = "llama3:8b"
 @main.route("/", methods=["GET", "POST"])
 def home():
     response = None
+    response2 = None
 
     if request.method == "POST":
         # prompt from user
