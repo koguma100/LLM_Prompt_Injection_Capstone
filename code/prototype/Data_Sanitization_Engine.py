@@ -5,10 +5,11 @@
 # then run import utils to use the csv to python list function (I've been copying data from this output into data.py,
 # so another task could be automating this into a function).
 
-
-from prototype import data, detect, sanitize
-from prototype.detect import Detect
-from prototype.sanitize import Sanitize
+from detect import Detect
+from sanitize import Sanitize
+from classifier import Classifier
+from data import Prompts
+from data import Patterns
 from performance_stats import PerformanceStats
 
 class ProgramData(object):
@@ -38,11 +39,10 @@ def process_single(prompt, patterns):
 
     # use the detection functions
 
-    # detected_base64 = Detector.scan_for_encoding(prompt, patterns.BASE_64_PATTERN)
-   # if detected_base64 is not None: prompt.prediction = 1
-    # print("Detected Base64:", detected_base64)
-    # Detector.place_tags(detected_base64)
-    # print(Detector.prompt)
+    LLM_Classifier = Classifier()
+    LLM_decision = LLM_Classifier.is_prompt_injection(prompt.prompt_text)
+    if LLM_decision:
+        prompt.prediction = 1
 
     detected_instruction_overrides = Detector.regex_scanner(patterns.INSTRUCTION_OVERRIDE_PATTERN)
     if len(detected_instruction_overrides) > 0:
@@ -93,7 +93,7 @@ def process_predict_batch(prompts, patterns):
     return predictions
 
 def main():
-    Engine = initialize_data(data.Prompts.HUGGING_FACE_PROMPTS, data.Patterns)
+    Engine = initialize_data(Prompts.HUGGING_FACE_PROMPTS, Patterns)
     process_predict_batch(Engine.prompts, Engine.patterns)
 
 if __name__ == "__main__":
