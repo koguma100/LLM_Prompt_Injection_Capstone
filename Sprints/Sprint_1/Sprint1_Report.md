@@ -1,78 +1,59 @@
+ 
+ 
 # Sprint 1 Report  1/12/26 - 2/22/26
+ ## YouTube link of Sprint 1 Video 
+https://www.youtube.com/watch?v=UhXACyUTNCE
 
-## YouTube link of Sprint * Video (Make this video unlisted)
+ ## What's New (User Facing)
+ * Prompt sanitization based on RegEx scanning
+ * LLM classification for prompt injection detection
+ * Statistical outputs
+* User interface
+* Expanded dataset
 
-## What's New (User Facing)
-* Feature 1 or Bug Fix 1
-* Feature 2 or Bug Fix 2
-* Feature n or Bug Fix n
+ ## Work Summary (Developer Facing)
+During this sprint, our team accomplished a basic sanitization function for prompt injections, reaching about 70% accuracy. The scanner includes flagging for pre-made regular expressions in the prompt and calls to a local LLM that determines whether or not the prompt contains a regular expression. We also created a prompt hardening template which is intended to separate potential unsanitized prompt injections from instructions to execute. Finally, we also created a poster for viceroy as a preliminary presentation of our work so far, which includes the background of our problem, examples of how our system should work, and an explanation of the mechanics behind our prototype.
 
-## Work Summary (Developer Facing)
-Provide a one paragraph synposis of what your team accomplished this sprint. Don't
-repeat the "What's New" list of features. Instead, help the instructor understand
-how you went about the work described there, any barriers you overcame, and any
-significant learnings for your team.
+ ## Unfinished Work
+We completed everything we planned for this sprint.
 
-## Unfinished Work
-If applicable, explain the work you did not finish in this sprint. For issues/user
-stories in the current sprint that have not been closed, (a) any progress toward
-completion of the issues has been clearly tracked (by checking the checkboxes of
-acceptance criteria), (b) a comment has been added to the issue to explain why the
-issue could not be completed (e.g., "we ran out of time" or "we did not anticipate
-it would be so much work"), and (c) the issue is added to a subsequent sprint, so
-that it can be addressed later.
+ ## Completed Issues/User Stories
+ Here are links to the issues that we completed in this sprint:
+ * Initial User Interface
+ * RegEx Scanning
+ * Expand Dataset
+ * Output statistics
 
-## Completed Issues/User Stories
-Here are links to the issues that we completed in this sprint:
-* URL of issue 1
-* URL of issue 2
-* URL of issue n
-Reminders (Remove this section when you save the file):
-* Each issue should be assigned to a milestone
-* Each completed issue should be assigned to a pull request
-* Each completed pull request should include a link to a "Before and After" video
-* All team members who contributed to the issue should be assigned to it on
-GitHub
-* Each issue should be assigned story points using a label
-* Story points contribution of each team member should be indicated in a comment
+ ## Incomplete Issues/User Stories
+N/A
 
-## Incomplete Issues/User Stories
-Here are links to issues we worked on but did not complete in this sprint:
-* URL of issue 1 <<One sentence explanation of why issue was not completed>>
-* URL of issue 2 <<One sentence explanation of why issue was not completed>>
-* URL of issue n <<One sentence explanation of why issue was not completed>>
-Examples of explanations (Remove this section when you save the file):
-* "We ran into a complication we did not anticipate (explain briefly)."
-* "We decided that the feature did not add sufficient value for us to work on it
-in this sprint (explain briefly)."
-* "We could not reproduce the bug" (explain briefly).
-* "We did not get to this issue because..." (explain briefly)
+ ## Code Files for Review
+ Please review the following code files, which were actively developed during this
+ sprint, for quality:
+*[Data_Sanitzation_Engine.py](https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/main/code/prototype/Data_Sanitization_Engine.py) *[classifier.py](https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/main/code/prototype/classifier.py
+*[data.py](https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/main/code/prototype/data.py)
+*[detect.py](https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/main/code/prototype/detect.py)
+*[peformance_stats.py](https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/main/code/prototype/performance_stats.py)
+*[sanitize.py](https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/main/code/prototype/sanitize.py)
+*[run.py](https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/main/code/flask-app/run.py)
+*[routes.py](https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/main/code/flask-app/app/routes.py)
 
-## Code Files for Review
-Please review the following code files, which were actively developed during this
-sprint, for quality:
-* [Name of code file 1](https://github.com/your_repo/file_extension)
-* [Name of code file 2](https://github.com/your_repo/file_extension)
-* [Name of code file 3](https://github.com/your_repo/file_extension)
+ ## Retrospective Summary
+ Here's what went well:
+ * Creating working parts of a prototype
+ * Completing the VICEROY poster
+ Here's what we'd like to improve:
+ * Connecting features together
+ * Completing the LLM classification feature
+ * Working in branches to make issue documentation (linking to pull requests) easier.
 
-## Retrospective Summary
-Here's what went well:
-* Item 1
-* Item 2
-* Item x
-Here's what we'd like to improve:
-* Item 1
-* Item 2
-* Item x
-Here are changes we plan to implement in the next sprint:
-* Item 1
-* Item 2
-* Item x
-Annotations
-
-## AI Use Disclosure
-
-Used ChatGPT to help generate initial template for flask application user interface.
-
-
+ Here are changes we plan to implement in the next sprint:
+ * Connect the UI and data processing modules for complete flow through the prototype
+ * Add additional systems for sanitization
+ 	* Sanitize prompts based on LLM classifier output.
+ * Add additional systems for detection
+ * Allow users to choose which LLM their sanitized input goes to.
+## AI Disclosure
+Used ChatGPT to help generate the initial template for the flask application user interface.
+Used ChatGPT to help with Python functions/packages such as regular expression scanning and Ollama queries.
 
