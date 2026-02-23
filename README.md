@@ -65,7 +65,7 @@ Submit a pull request :D
 Project reports: https://github.com/koguma100/LLM_Prompt_Injection_Capstone/tree/main/reports  
 Sprint reports: https://github.com/koguma100/LLM_Prompt_Injection_Capstone/tree/main/Sprints/Sprint_1    
 Sprint 1 pull request: https://github.com/koguma100/LLM_Prompt_Injection_Capstone/pull/10  
-Video: https://wsu.zoom.us/rec/share/0dqRWFE30yrMnKyMNyMjd4nvKxuI-D_gxhyytnGQioeWmv-1y3U__Shh_RxpBaL0.n-NPeKLvAUt2-DXt?startTime=1771812736000  
+Sprint 1 pull request video: https://wsu.zoom.us/rec/share/0dqRWFE30yrMnKyMNyMjd4nvKxuI-D_gxhyytnGQioeWmv-1y3U__Shh_RxpBaL0.n-NPeKLvAUt2-DXt?startTime=1771812736000  
 Poster submitted for VICEROY Symposium: https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/main/Sprints/Sprint_1/Research_Poster.png  
 
 ## License
