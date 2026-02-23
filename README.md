@@ -4,23 +4,39 @@
 
 ### Researching and testing sanitization techniques for mitigated prompt injections through poisoned data assuming trusted user prompts.
 
-TODO: A 20-second elevator pitch of your project - its core idea summarized in one sentence.
-
-### Additional information about the project
-
-TODO: Write a compelling/creative/informative project description / summary
+### In positions where users – researchers, professors, and recruiters – take in large amounts of data for LLM analysis, prompt injections can stay hidden among a breadth of benign data. Our solution gives the user trust that the data they provide an LLM for processing will be sanitized of any prompt injections that could compromise internal systems.
 
 ## Installation
 
 ### Prerequisites
 
-Python required
+### This project requires Python and several packages listed in code/requirements.txt:
 
-For running the Data_Sanitization_Engine.py run
+requests
+scikit-learn
+matplotlib
+scipy
+numpy
+flask
+ollama
+
+### Add-ons (Python packages)
+
+Requests: making http requests to local LLMs
+Scikit-learn: statistical outputs for testing detection performance
+Matplotlib: plotting the confusion matrix
+Scipy: delivers functions for computing the confusion matrix.
+Numpy: general math operations
+Flask: python web framework
+Ollama: locally run open-source LLMs
+
+### Installation Steps
+
+For running the Data_Sanitization_Engine.py, run:
 
 pip install -r requirements.txt (in code directory)
 
-For running the Flask App install:
+For running the Flask app install:
 
 Flask, Ollama, Ollama model of choice (modify code)
 
@@ -28,33 +44,32 @@ Then run:
 
 python run.py
 
-### Add-ons
-
-TODO: List which add-ons are included in the project, and the purpose each add-on serves in your app.
-
-### Installation Steps
-
-TODO: Describe the installation process (making sure you mention `bundle install`).
-Instructions need to be such that a user can just copy/paste the commands to get things set up and running. 
-
+Future development will provide a Dockerfile to bypass manually entering the above steps.
 
 ## Functionality
 
-TODO: Write usage instructions. Structuring it as a walkthrough can help structure this section,
-and showcase your features.
-
+In the locally hosted web page, enter a prompt for the LLM and the accompanying data. Note that these fields are separated, and only the “data” field will be processed. Once you have submitted, the Python backend will detect the data according to several regular expressions representative of prompt injections and with the response of an LLM classifier. Then, parts of the data determined to be prompt injections are removed and replaced with “[REDACTED]”. 
 
 ## Known Problems
 
-TODO: Describe any known issues, bugs, odd behaviors or code smells. 
-Provide steps to reproduce the problem and/or name a file or a function where the problem lives.
+We are unaware of any current problems with the code, as our scope for this sprint was limited and focused on creating a functioning prototype.
 
-
-## Contributing
+## Contributing 
+Fork it!
+Create your feature branch: git checkout -b my-new-feature
+Commit your changes: git commit -am 'Add some feature'
+Push to the branch: git push origin my-new-feature
+Submit a pull request :D
 
 ## Additional Documentation
+Project reports: https://github.com/koguma100/LLM_Prompt_Injection_Capstone/tree/main/reports
+Sprint reports: https://github.com/koguma100/LLM_Prompt_Injection_Capstone/tree/main/Sprints/Sprint_1
+Sprint 1 pull request: https://github.com/koguma100/LLM_Prompt_Injection_Capstone/pull/10
+Video: https://wsu.zoom.us/rec/share/0dqRWFE30yrMnKyMNyMjd4nvKxuI-D_gxhyytnGQioeWmv-1y3U__Shh_RxpBaL0.n-NPeKLvAUt2-DXt?startTime=1771812736000
+
+Poster submitted for VICEROY Symposium: https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/main/Sprints/Sprint_1/Research_Poster.png
 
 ## License
 
-If you haven't already, add a file called `LICENSE.txt` with the text of the appropriate license.
-We recommend using the MIT license: <https://choosealicense.com/licenses/mit/>
+MIT License
+
