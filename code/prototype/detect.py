@@ -48,16 +48,13 @@ class Detect(object):
         if not substrings:
             return self.prompt
 
-        # Remove empty or whitespace-only substrings
         substrings = [s for s in substrings if s and s.strip()]
         if not substrings:
             return self.prompt
 
-        # Sort by length (longest first) to avoid partial overlap issues
         substrings = sorted(set(substrings), key=len, reverse=True)
 
         if not extend_to_sentence_end:
-            # Original behavior: tag only the matched substring
             pattern = re.compile("|".join(re.escape(s) for s in substrings))
 
             def replacer(match):
@@ -65,17 +62,12 @@ class Detect(object):
 
             self.prompt = pattern.sub(replacer, self.prompt)
         else:
-            # New behavior: tag from start of substring to end of sentence
-            # Create pattern to match each substring followed by content until sentence end
-            # Define sentence boundaries: ., !, ?, or end of string
             sentence_end_pattern = r'(?<=[.!?])\s+|$'
 
-            # Process each substring individually to handle overlapping cases correctly
             for substring in substrings:
                 # Find all occurrences of the substring
                 pattern = re.compile(re.escape(substring))
 
-                # Keep track of replacements to avoid index shifting issues
                 replacements = []
                 offset = 0
 
@@ -83,22 +75,17 @@ class Detect(object):
                     start_pos = match.start() + offset
                     end_pos = match.end() + offset
 
-                    # Find the end of the sentence starting from the match position
                     text_after = self.prompt[end_pos:]
                     sentence_end_match = re.search(sentence_end_pattern, text_after)
 
                     if sentence_end_match:
-                        # Extend to the end of the sentence (including punctuation)
                         sentence_end_pos = end_pos + sentence_end_match.start()
                     else:
-                        # If no sentence boundary found, tag until the end of the string
                         sentence_end_pos = len(self.prompt)
 
-                    # Store replacement info (using original positions before modifications)
                     replacements.append((start_pos, sentence_end_pos,
                                          f"{start_tag}{self.prompt[start_pos:sentence_end_pos]}{end_tag}"))
 
-                # Apply replacements from end to start to maintain correct indices
                 replacements.sort(reverse=True)
                 for start, end, replacement in replacements:
                     self.prompt = self.prompt[:start] + replacement + self.prompt[end:]

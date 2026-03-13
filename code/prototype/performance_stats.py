@@ -18,6 +18,25 @@ class PerformanceStats:
         print(f"confusion matrix saved to {filename}")
         return cm
 
+    def print_false_negatives(self, prompts: list[str], filename="false_negatives.txt"):
+        false_negatives = [
+            prompt for prompt, actual, pred in zip(prompts, self.actuals, self.predicted)
+            if actual == 1 and pred == 0
+        ]
+
+        with open(filename, 'w') as f:
+            f.write("False Negatives (actual=injection, predicted=benign):\n")
+            f.write("=" * 30 + "\n")
+            if not false_negatives:
+                f.write("None found.\n")
+            else:
+                for i, prompt in enumerate(false_negatives, 1):
+                    f.write(f"{i}. {prompt}\n")
+
+        print(f"{len(false_negatives)} false negative(s) saved to {filename}")
+        return false_negatives
+
+
     def stats(self, filename="performance_stats.txt"):
         stats = {
             'accuracy': accuracy_score(self.actuals, self.predicted),

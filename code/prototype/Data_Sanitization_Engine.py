@@ -5,6 +5,7 @@
 # then run import utils to use the csv to python list function (I've been copying data from this output into data.py,
 # so another task could be automating this into a function).
 
+
 from detect import Detect
 from sanitize import Sanitize
 from classifier import Classifier
@@ -38,7 +39,6 @@ def process_single(prompt, patterns):
     Detector = initialize_detector(prompt.prompt_text, patterns)
 
     # use the detection functions
-
     LLM_Classifier = Classifier()
     LLM_decision = LLM_Classifier.is_prompt_injection(prompt.prompt_text)
     if LLM_decision:
@@ -60,7 +60,7 @@ def process_single(prompt, patterns):
     Detector.place_tags(detected_authority_overrides, start_tag="<flag>", end_tag="</flag>",extend_to_sentence_end=True)
 
     Sanitizer = initialize_sanitizer(Detector.prompt)
-    Sanitizer.sanitize()
+    Sanitizer.redact()
     print("SANITIZED PROMPT:", Sanitizer.prompt, "\n")
 
     return prompt.prediction
