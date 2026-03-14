@@ -1,0 +1,6 @@
+Performance Statistics:
+==============================
+Accuracy:  0.7320
+Precision: 0.9173
+Recall:    0.5100
+F1 Score:  0.6555

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Prompt Tester</title>
+    <style>
+        /* ===== Reset & Base ===== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            background-color: #f4f6f8;
+            color: #333;
+            padding: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 500;
+        }
+
+        /* ===== Container ===== */
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        /* ===== Form Elements ===== */
+        label {
+            display: block;
+            margin-top: 20px;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        textarea, input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* ===== Button ===== */
+        button {
+            margin-top: 20px;
+            padding: 12px 18px;
+            border: none;
+            background-color: #2d6cdf;
+            color: white;
+            font-size: 15px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #1f4fb3;
+        }
+
+        /* ===== Response Box ===== */
+        .response-box {
+            margin-top: 25px;
+            padding: 15px;
+            background: #f1f3f5;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            min-height: 80px;
+            white-space: pre-wrap;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Prompt Injection Tester</h1>
+
+        <form method="POST" action="{{ url_for('main.home') }}">
+            <label for="prompt">Prompt</label>
+            <textarea name="prompt" id="prompt" placeholder="Enter the main prompt...">{{ request.form.prompt }}</textarea>
+
+            <label for="data">Data</label>
+            <textarea name="data" id="data" placeholder="Enter external data or context...">{{ request.form.data }}</textarea>
+
+            <button type="submit">Submit</button>
+        </form>
+
+        {% if response %}
+            <label>Response with template</label>
+            <div class="response-box">{{ response.message.content }}</div>
+            <label>Response without template</label>
+            <div class="response-box">{{ response2.message.content }}</div>
+        {% endif %}
+
+        <div class="footer">
+            Current model: {{ model  }}
+        </div>
+    </div>
+
+</body>
+</html>
