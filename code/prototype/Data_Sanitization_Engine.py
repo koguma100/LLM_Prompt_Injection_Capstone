@@ -40,9 +40,9 @@ def process_single(prompt, patterns):
     # use the detection functions
 
     LLM_Classifier = Classifier()
-    LLM_decision = LLM_Classifier.is_prompt_injection(prompt.prompt_text)
-    if LLM_decision:
+    if LLM_Classifier.is_prompt_injection(prompt.prompt_text):
         prompt.prediction = 1
+        print("PREDICTION UPDATED -- LLM")
 
     detected_instruction_overrides = Detector.regex_scanner(patterns.INSTRUCTION_OVERRIDE_PATTERN)
     if len(detected_instruction_overrides) > 0:
