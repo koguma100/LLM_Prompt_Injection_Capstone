@@ -26,11 +26,11 @@ Here are links to issues we worked on but did not complete in this sprint:
 ## Code Files for Review
 Please review the following code files, which were actively developed during this
 sprint, for quality:
-* Normalize_fuzzy.py - obfuscation module (https://github.com/koguma100/LLM_Prompt_Injection_Capstone/code/prototype/normalize/normalize_fuzzy.py)
+* [Normalize_fuzzy.py](https://github.com/koguma100/LLM_Prompt_Injection_Capstone/code/prototype/normalize/normalize_fuzzy.py)
 * [test_normalize.py](https://github.com/koguma100/LLM_Prompt_Injection_Capstone/code/prototype/normalize/test_normalize.py)  
 * [Data_Sanitization_Engine](https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/main/code/prototype/Data_Sanitization_Engine.py)  
-*[prompt_hardening.py](https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/output-validation/code/prototype/prompt_hardening.py)  
-*[api_call.py](https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/output-validation/code/prototype/api_call.py)  
+* [prompt_hardening.py](https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/output-validation/code/prototype/prompt_hardening.py)  
+* [api_call.py](https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/output-validation/code/prototype/api_call.py)  
 
 ## Retrospective Summary
 Here's what went well:
