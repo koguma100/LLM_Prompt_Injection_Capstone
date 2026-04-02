@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request
 from ollama import chat
+from .sanitization import process_single
 
 
 main = Blueprint("main", __name__)
@@ -20,6 +21,7 @@ model = "llama3:8b"
 def home():
     response = None
     response2 = None
+    response3 = None
 
     if request.method == "POST":
         # prompt from user
@@ -30,16 +32,18 @@ def home():
         data = request.form.get("data")
         prompt_template[3]  = data
 
-        response = chat(
-            model=model,
-            messages=[{'role': 'user', 'content': " ".join(prompt_template)}],
-        )
+        # response = chat(
+        #     model=model,
+        #     messages=[{'role': 'user', 'content': " ".join(prompt_template)}],
+        # )
 
-        response2 = chat(
-            model=model,
-            messages=[{'role': 'user', 'content': " ".join([prompt, data])}],
-        )
+        # response2 = chat(
+        #     model=model,
+        #     messages=[{'role': 'user', 'content': " ".join([prompt, data])}],
+        # )
+
+        response3 = process_single(prompt, data, None)
 
         print(response)
 
-    return render_template("base.html", response=response, response2=response2, model=model)
+    return render_template("base.html", response=response, response2=response2, response3=response3, model=model)

@@ -111,6 +111,11 @@
             <label>Response without template</label>
             <div class="response-box">{{ response2.message.content }}</div>
         {% endif %}
+        
+        {% if response3 %}
+            <label>Response with sanitation</label>
+            <div class="response-box">{{ response3 }}</div>
+        {% endif %}
 
         <div class="footer">
             Current model: {{ model  }}
