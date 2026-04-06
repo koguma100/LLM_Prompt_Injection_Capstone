@@ -1,5 +1,5 @@
 import requests
-from api_call import local_llm_call
+from .api_call import local_llm_call
 
 def llm_validate(user_prompt, llm_output):
     url = "http://localhost:11434/api/generate"
