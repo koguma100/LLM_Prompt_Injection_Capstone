@@ -1,3 +1,8 @@
 venv
 .venv
 .env
+confusion_matrix.png
+false_negatives.txt
+false_positives.txt
+performance_stats.txt
+__pycache__/
