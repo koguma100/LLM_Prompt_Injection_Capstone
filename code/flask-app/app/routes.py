@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request
 from ollama import chat
 from .sanitization import process_single
+from .prototype.data import Patterns
 
 
 main = Blueprint("main", __name__)
@@ -32,6 +33,7 @@ def home():
         data = request.form.get("data")
         prompt_template[3]  = data
 
+        # prompt hardening response w/ Ollama, commented out because its kind of slow and we want to focus on the sanitization engine for now 
         # response = chat(
         #     model=model,
         #     messages=[{'role': 'user', 'content': " ".join(prompt_template)}],
@@ -42,7 +44,7 @@ def home():
         #     messages=[{'role': 'user', 'content': " ".join([prompt, data])}],
         # )
 
-        response3 = process_single(prompt, data, None)
+        response3 = process_single(prompt, data, Patterns)
 
         print(response)
 
