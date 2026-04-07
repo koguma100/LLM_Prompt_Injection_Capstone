@@ -36,6 +36,24 @@ class PerformanceStats:
         print(f"{len(false_negatives)} false negative(s) saved to {filename}")
         return false_negatives
 
+    def print_false_positives(self, prompts: list[str], filename="false_positives.txt"):
+        false_positives = [
+            prompt for prompt, actual, pred in zip(prompts, self.actuals, self.predicted)
+            if actual == 0 and pred == 1
+        ]
+
+        with open(filename, 'w') as f:
+            f.write("False Positives (actual=injection, predicted=benign):\n")
+            f.write("=" * 30 + "\n")
+            if not false_positives:
+                f.write("None found.\n")
+            else:
+                for i, prompt in enumerate(false_positives, 1):
+                    f.write(f"{i}. {prompt}\n")
+
+        print(f"{len(false_positives)} false positives(s) saved to {filename}")
+        return false_positives
+
 
     def stats(self, filename="performance_stats.txt"):
         stats = {
