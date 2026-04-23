@@ -131,9 +131,9 @@
         <h1>Prompt Injection Tester</h1>
         <form method="POST" action="{{ url_for('main.home') }}">
             <label for="prompt">Prompt</label>
-            <textarea name="prompt" id="prompt" placeholder="Enter the main prompt...">{{ request.form.prompt }}</textarea>
+            <textarea name="prompt" id="prompt" placeholder="Enter the main prompt...">{{ request.form.get('prompt', '') }}</textarea>
             <label for="data">Data</label>
-            <textarea name="data" id="data" placeholder="Enter external data or context...">{{ request.form.data }}</textarea>
+            <textarea name="data" id="data" placeholder="Enter external data or context...">{{ request.form.get('data', '') }}</textarea>
             <button type="submit">Submit</button>
         </form>
 
@@ -155,7 +155,7 @@
                 </div>
                 <div class="report-data">
                     <div class="report-data-label">Sanitized Data</div>
-                    <div class="report-data-content">{{ response3[1] }}</div>
+                    <textarea readonly class="report-data-content">{{ response3[1] }}</textarea>
                 </div>
             </div>
         {% endif %}

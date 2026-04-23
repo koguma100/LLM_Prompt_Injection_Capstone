@@ -34,18 +34,18 @@ def home():
         prompt_template[3]  = data
 
         # prompt hardening response w/ Ollama, commented out because its kind of slow and we want to focus on the sanitization engine for now 
-        # response = chat(
-        #     model=model,
-        #     messages=[{'role': 'user', 'content': " ".join(prompt_template)}],
-        # )
+        response = chat(
+            model=model,
+            messages=[{'role': 'user', 'content': " ".join(prompt_template)}],
+        )
 
-        # response2 = chat(
-        #     model=model,
-        #     messages=[{'role': 'user', 'content': " ".join([prompt, data])}],
-        # )
+        response2 = chat(
+            model=model,
+            messages=[{'role': 'user', 'content': " ".join([prompt, data])}],
+        )
 
         response3 = process_single(prompt, data, Patterns)
 
-        print(response)
+        #print(response)
 
     return render_template("base.html", response=response, response2=response2, response3=response3, model=model)
