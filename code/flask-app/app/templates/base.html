@@ -117,6 +117,39 @@
             white-space: pre-wrap;
             line-height: 1.6;
         }
+        /* ===== File Upload ===== */
+        .file-input-wrapper {
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .file-input-wrapper input[type="file"] {
+            width: auto;
+            padding: 6px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .file-badge {
+            display: none;
+            font-size: 12px;
+            background: #e0eaff;
+            border: 1px solid #a0bfff;
+            border-radius: 4px;
+            padding: 3px 8px;
+        }
+        .file-clear {
+            cursor: pointer;
+            color: #c0392b;
+            font-weight: bold;
+            margin-left: 4px;
+        }
+        .file-source-note {
+            font-size: 12px;
+            color: #555;
+            font-style: italic;
+            margin-top: 6px;
+        }
         /* ===== Footer ===== */
         .footer {
             text-align: center;
@@ -129,36 +162,147 @@
 <body>
     <div class="container">
         <h1>Prompt Injection Tester</h1>
-        <form method="POST" action="{{ url_for('main.home') }}">
+        <form id="main-form">
             <label for="prompt">Prompt</label>
-            <textarea name="prompt" id="prompt" placeholder="Enter the main prompt...">{{ request.form.get('prompt', '') }}</textarea>
+            <textarea name="prompt" id="prompt" placeholder="Enter the main prompt..."></textarea>
             <label for="data">Data</label>
-            <textarea name="data" id="data" placeholder="Enter external data or context...">{{ request.form.get('data', '') }}</textarea>
-            <button type="submit">Submit</button>
+            <textarea name="data" id="data" placeholder="Enter external data or context..."></textarea>
+            <div class="file-input-wrapper">
+                <input type="file" id="data-file" name="data_file" accept=".txt,.md,.csv,.pdf,.docx" multiple>
+                <span class="file-badge" id="file-badge">
+                    <span id="file-badge-name"></span>
+                    <span class="file-clear" id="file-clear" title="Remove file">&#x2715;</span>
+                </span>
+            </div>
+            <div style="font-size:12px;color:#888;margin-top:4px;">
+                Upload one or more files to use as data (overrides text above). Supports .txt, .pdf, .docx, .md, .csv
+            </div>
+            <button type="submit" id="submit-btn">Submit</button>
         </form>
 
-        {% if response %}
-            <label>Response with template</label>
-            <div class="response-box">{{ response.message.content }}</div>
-            <label>Response without template</label>
-            <div class="response-box">{{ response2.message.content }}</div>
-        {% endif %}
+        <div id="responses"></div>
 
-        {% if response3 %}
-            <label>Response with Detection and Sanitation</label>
-            <div class="report-box">
-                <div class="report-status">
-                    <span class="report-status-label">Prompt Injection Detected:</span>
-                    <span class="report-status-value {{ 'detected' if response3[0] else 'clean' }}">
-                        {{ "Yes" if response3[0] else "No" }}
-                    </span>
-                </div>
-                <div class="report-data">
-                    <div class="report-data-label">Sanitized Data</div>
-                    <textarea readonly class="report-data-content">{{ response3[1] }}</textarea>
-                </div>
-            </div>
-        {% endif %}
+        <script>
+            const dataFileInput = document.getElementById('data-file');
+            const fileBadge = document.getElementById('file-badge');
+            const fileBadgeName = document.getElementById('file-badge-name');
+            const fileClear = document.getElementById('file-clear');
+            const dataTextarea = document.getElementById('data');
+
+            dataFileInput.addEventListener('change', function() {
+                const files = Array.from(this.files);
+                if (!files.length) return;
+
+                fileBadgeName.textContent = files.length === 1
+                    ? files[0].name
+                    : `${files.length} files selected`;
+                fileBadge.style.display = 'inline-flex';
+
+                const textTypes = ['.txt', '.md', '.csv'];
+                const textFiles = files.filter(f => textTypes.some(ext => f.name.toLowerCase().endsWith(ext)));
+                const binaryFiles = files.filter(f => !textTypes.some(ext => f.name.toLowerCase().endsWith(ext)));
+
+                if (textFiles.length === 0) {
+                    dataTextarea.value = '';
+                    dataTextarea.placeholder = `${files.length} file(s) will be extracted on submit`;
+                    return;
+                }
+
+                // Read all text files and concatenate them
+                let results = new Array(textFiles.length);
+                let done = 0;
+                textFiles.forEach((file, i) => {
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        results[i] = `--- ${file.name} ---\n${e.target.result}`;
+                        if (++done === textFiles.length) {
+                            const combined = results.join('\n\n');
+                            dataTextarea.value = binaryFiles.length
+                                ? combined + `\n\n[${binaryFiles.map(f => f.name).join(', ')} will be extracted on submit]`
+                                : combined;
+                        }
+                    };
+                    reader.readAsText(file);
+                });
+            });
+
+            fileClear.addEventListener('click', function() {
+                dataFileInput.value = '';
+                fileBadge.style.display = 'none';
+                fileBadgeName.textContent = '';
+                dataTextarea.value = '';
+                dataTextarea.placeholder = 'Enter external data or context...';
+            });
+
+            document.getElementById('main-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const btn = document.getElementById('submit-btn');
+                btn.disabled = true;
+                btn.textContent = 'Loading...';
+
+                try {
+                    const res = await fetch('{{ url_for("main.home") }}', {
+                        method: 'POST',
+                        body: new FormData(this)
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || 'Server error');
+
+                    function makeEl(tag, cls, text) {
+                        const el = document.createElement(tag);
+                        if (cls) el.className = cls;
+                        if (text !== undefined) {
+                            if (tag === 'textarea') el.value = text;
+                            else el.textContent = text;
+                        }
+                        return el;
+                    }
+
+                    const container = document.getElementById('responses');
+                    container.innerHTML = '';
+
+                    if (data.filename) {
+                        const note = makeEl('div', 'file-source-note', `Data sourced from file: ${data.filename}`);
+                        container.appendChild(note);
+                    }
+
+                    container.appendChild(makeEl('label', null, 'Response with template'));
+                    container.appendChild(makeEl('div', 'response-box', data.response));
+
+                    container.appendChild(makeEl('label', null, 'Response without template'));
+                    container.appendChild(makeEl('div', 'response-box', data.response2));
+
+                    container.appendChild(makeEl('label', null, 'Response with Detection and Sanitation'));
+
+                    const reportBox = makeEl('div', 'report-box');
+
+                    const status = makeEl('div', 'report-status');
+                    status.appendChild(makeEl('span', 'report-status-label', 'Prompt Injection Detected:'));
+                    const statusVal = makeEl('span', 'report-status-value ' + (data.detected ? 'detected' : 'clean'), data.detected ? 'Yes' : 'No');
+                    status.appendChild(statusVal);
+                    reportBox.appendChild(status);
+
+                    const reportData = makeEl('div', 'report-data');
+                    reportData.appendChild(makeEl('div', 'report-data-label', 'Sanitized Data'));
+                    const sanitizedBox = makeEl('textarea', 'report-data-content', data.sanitized);
+                    sanitizedBox.readOnly = true;
+                    reportData.appendChild(sanitizedBox);
+                    reportBox.appendChild(reportData);
+
+                    container.appendChild(reportBox);
+                } catch (err) {
+                    const container = document.getElementById('responses');
+                    container.innerHTML = '';
+                    const errBox = document.createElement('div');
+                    errBox.className = 'response-box';
+                    errBox.textContent = 'Error: ' + err.message;
+                    container.appendChild(errBox);
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = 'Submit';
+                }
+            });
+        </script>
 
         <div class="footer">
             Current model: {{ model }}

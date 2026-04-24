@@ -5,3 +5,5 @@ matplotlib
 scipy
 numpy
 datasets
+pypdf
+python-docx
