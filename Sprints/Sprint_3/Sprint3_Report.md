@@ -36,10 +36,12 @@ sprint, for quality:
 Here's what went well:
 * Implemented full data pipeline and connected to UI
 * Expanded dataset to better generalize to problem
+  
 Here's what we'd like to improve:
 * Overall testing robustness
-* Improving and expanding the token vectorization strategy for detection 
+* Improving and expanding the token vectorization strategy for detection
+  
 Here are changes we plan to implement in the next sprint:
 * Exploratory data analysis on current detection edge cases
 * Explore different media types such as image, video, audio
-
+* Additional detection modules for our detection subsystem
