@@ -31,7 +31,7 @@ sprint, for quality:
 * base.html : https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/main/code/flask-app/app/templates/base.html
 * routes.py: https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/main/code/flask-app/app/routes.py
 * api_call.py: https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/main/code/prototype/api_call.py
-*prompt_hardening.py: https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/main/code/prototype/prompt_hardening.py
+* prompt_hardening.py: https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/main/code/prototype/prompt_hardening.py
 ## Retrospective Summary
 Here's what went well:
 * Implemented full data pipeline and connected to UI
