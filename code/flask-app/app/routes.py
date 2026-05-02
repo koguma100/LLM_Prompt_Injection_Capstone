@@ -72,10 +72,10 @@ def extract_file_text(file_storage):
 @main.route("/", methods=["GET", "POST"])
 def home():
     if request.method == "POST":
-        prompt = request.form.get("prompt")
-        prompt_template[1] = prompt
-
         try:
+            prompt = request.form.get("prompt")
+            prompt_template[1] = prompt
+
             uploaded_files = [f for f in request.files.getlist('data_file') if f.filename]
             if uploaded_files:
                 data = '\n\n'.join(
@@ -85,29 +85,31 @@ def home():
             else:
                 data = request.form.get("data", "")
                 filename = None
+
+            prompt_template[3] = data
+
+            response = chat(
+                model=model,
+                messages=[{'role': 'user', 'content': " ".join(prompt_template)}],
+            )
+
+            response2 = chat(
+                model=model,
+                messages=[{'role': 'user', 'content': " ".join([prompt, data])}],
+            )
+
+            response3 = process_single(prompt, data, Patterns)
+
+            return jsonify({
+                'response': response.message.content,
+                'response2': response2.message.content,
+                'detected': bool(response3[0]),
+                'sanitized': response3[1],
+                'filename': filename,
+            })
         except ValueError as e:
             return jsonify({'error': str(e)}), 400
-
-        prompt_template[3] = data
-
-        response = chat(
-            model=model,
-            messages=[{'role': 'user', 'content': " ".join(prompt_template)}],
-        )
-
-        response2 = chat(
-            model=model,
-            messages=[{'role': 'user', 'content': " ".join([prompt, data])}],
-        )
-
-        response3 = process_single(prompt, data, Patterns)
-
-        return jsonify({
-            'response': response.message.content,
-            'response2': response2.message.content,
-            'detected': bool(response3[0]),
-            'sanitized': response3[1],
-            'filename': filename,
-        })
+        except Exception as e:
+            return jsonify({'error': f'Server error: {e}'}), 500
 
     return render_template("base.html", model=model)
