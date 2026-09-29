@@ -30,8 +30,3 @@ def csv_to_list(filepath):
             label = int(row[1])
             data.append((text, label))
         return data
-
-
-# Example usage
-result = csv_to_list("../hugging-face/hugging-face-samples.csv")
-print(result)

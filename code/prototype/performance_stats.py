@@ -15,8 +15,46 @@ class PerformanceStats:
         plt.title('Confusion Matrix')
         plt.savefig(filename, dpi=300, bbox_inches='tight')
         plt.close()
-        print(f"confusion matrix saved to {filename}")
+        print(f"Detection confusion matrix saved to {filename}")
         return cm
+
+    # Output validation fail rate of the LLM response before vs. after sanitization, split by label.
+    # Malicious: the after rate should drop (injections neutralized). Benign: both rates should stay near 0 (no over-redaction).
+    def sanitization_fail_rates(self, unsanitized_valid, sanitized_valid, filename="sanitization_fail_rates.png"):
+        columns = ["Label", "Samples", "Failed validation\nbefore sanitization", "Failed validation\nafter sanitization", "Change"]
+        rows = []
+        for name, label in (("Malicious", 1), ("Benign", 0)):
+            idx = [i for i, actual in enumerate(self.actuals) if actual == label]
+            n = len(idx)
+            before = sum(1 for i in idx if not unsanitized_valid[i])
+            after = sum(1 for i in idx if not sanitized_valid[i])
+            before_pct = 100 * before / n if n else 0
+            after_pct = 100 * after / n if n else 0
+            rows.append([name, str(n), f"{before}/{n} ({before_pct:.0f}%)", f"{after}/{n} ({after_pct:.0f}%)",
+                         f"{after_pct - before_pct:+.0f} pts"])
+
+        fig, ax = plt.subplots(figsize=(10, 1.8))
+        ax.axis("off")
+        table = ax.table(cellText=rows, colLabels=columns, cellLoc="center", loc="center",
+                         colWidths=[0.14, 0.12, 0.28, 0.28, 0.14])
+        table.auto_set_font_size(False)
+        table.set_fontsize(11)
+        table.scale(1, 2.2)
+        for (row, _), cell in table.get_celld().items():
+            cell.set_edgecolor("#d0cfca")
+            if row == 0:
+                cell.set_facecolor("#eef3fb")
+                cell.set_text_props(weight="bold")
+        ax.set_title("Output Validation Fail Rate Before vs. After Sanitization", weight="bold")
+        plt.savefig(filename, dpi=300, bbox_inches='tight')
+        plt.close()
+
+        print("\nSANITIZATION EFFECTIVENESS (responses failing output validation)")
+        print(f"{'Label':<10}{'Samples':>8}{'Before sanitization':>22}{'After sanitization':>21}{'Change':>11}")
+        for row in rows:
+            print(f"{row[0]:<10}{row[1]:>8}{row[2]:>22}{row[3]:>21}{row[4]:>11}")
+        print(f"Sanitization effectiveness table saved to {filename}")
+        return rows
 
     def print_false_negatives(self, prompts: list[str], filename="false_negatives.txt"):
         false_negatives = [
@@ -33,7 +71,7 @@ class PerformanceStats:
                 for i, prompt in enumerate(false_negatives, 1):
                     f.write(f"{i}. {prompt}\n")
 
-        print(f"{len(false_negatives)} false negative(s) saved to {filename}")
+        print(f"{len(false_negatives)} false negative(s) (injection predicted as benign) saved to {filename}")
         return false_negatives
 
     def print_false_positives(self, prompts: list[str], filename="false_positives.txt"):
@@ -51,7 +89,7 @@ class PerformanceStats:
                 for i, prompt in enumerate(false_positives, 1):
                     f.write(f"{i}. {prompt}\n")
 
-        print(f"{len(false_positives)} false positives(s) saved to {filename}")
+        print(f"{len(false_positives)} false positive(s) (benign predicted as injection) saved to {filename}")
         return false_positives
 
 
@@ -70,5 +108,5 @@ class PerformanceStats:
             f.write(f"Recall:    {stats['recall']:.4f}\n")
             f.write(f"F1 Score:  {stats['f1_score']:.4f}\n")
 
-        print(f"Statistics exported to {filename}")
+        print(f"Detection performance stats (accuracy, precision, recall, F1) saved to {filename}")
         return stats

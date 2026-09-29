@@ -22,7 +22,7 @@ def local_llm_call(user_prompt: str):
         response = requests.post(url, json=payload, timeout=60)
         response.raise_for_status()
     except requests.exceptions.RequestException as e:
-        print(f"LLM call failed: {e}")
+        print(f"ERROR: LLM call failed: {e}")
         return False
 
     return response.json()["response"]

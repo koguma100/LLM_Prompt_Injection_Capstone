@@ -5,3 +5,7 @@ matplotlib
 scipy
 numpy
 datasets
+nltk
+pandas
+sentence-transformers
+torch

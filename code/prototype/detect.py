@@ -1,8 +1,19 @@
 import utils
-
+from sentence_transformers import SentenceTransformer
 import re
 import base64
+import numpy as np
 import binascii
+
+model = SentenceTransformer('all-MiniLM-L6-v2')
+
+
+def split_into_clauses(sentence):
+    # Split on punctuation/conjunctions — adjust as needed
+    if not sentence or not isinstance(sentence, str):
+        return []
+    return [c.strip() for c in re.split(r'[,;]|\band\b|\bbut\b|\bor\b', sentence) if c.strip()]
+
 
 class Detect(object):
     def __init__(self, prompt, patterns):
@@ -38,6 +49,8 @@ class Detect(object):
 
     def regex_scanner(self, pattern):
             results = []
+            if not self.prompt or not isinstance(self.prompt, str):
+                return results
             for match in pattern.finditer(self.prompt):
                 results.append(match.group())
             return results
@@ -93,6 +106,17 @@ class Detect(object):
 
         return None
 
+    @staticmethod
+    def find_outlier_clauses(sentence, threshold=0.4):
+        clauses = split_into_clauses(sentence)
+        if len(clauses) < 2:
+            return []
 
-
+        embeddings = model.encode(clauses)
+        centroid = embeddings.mean(axis=0)
+        distances = [
+            1 - np.dot(e, centroid) / (np.linalg.norm(e) * np.linalg.norm(centroid))
+            for e in embeddings
+        ]
+        return [clause for clause, dist in zip(clauses, distances) if dist > threshold]
 

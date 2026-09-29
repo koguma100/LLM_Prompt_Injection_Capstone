@@ -1,7 +1,15 @@
 from flask import Blueprint, render_template, request
-from ollama import chat
+#from ollama import chat
 from .sanitization import process_single
-from .prototype.data import Patterns
+import sys
+import os
+
+# Add prototype directory to sys.path for imports
+prototype_dir = os.path.join(os.path.dirname(__file__), '../../prototype')
+if prototype_dir not in sys.path:
+    sys.path.insert(0, prototype_dir)
+
+from data import Patterns
 
 
 main = Blueprint("main", __name__)
@@ -26,14 +34,14 @@ def home():
 
     if request.method == "POST":
         # prompt from user
-        prompt = request.form.get("prompt")
+        prompt = request.form.get("prompt", "").strip()
         prompt_template[1] = prompt
 
         # data from user
-        data = request.form.get("data")
+        data = request.form.get("data", "").strip()
         prompt_template[3]  = data
 
-        # prompt hardening response w/ Ollama, commented out because its kind of slow and we want to focus on the sanitization engine for now 
+        # prompt hardening response w/ Ollama, commented out because its kind of slow and we want to focus on the sanitization engine for now
         # response = chat(
         #     model=model,
         #     messages=[{'role': 'user', 'content': " ".join(prompt_template)}],
@@ -44,7 +52,8 @@ def home():
         #     messages=[{'role': 'user', 'content': " ".join([prompt, data])}],
         # )
 
-        response3 = process_single(prompt, data, Patterns)
+        if prompt and data:
+            response3 = process_single(prompt, data, Patterns)
 
         print(response)
 
