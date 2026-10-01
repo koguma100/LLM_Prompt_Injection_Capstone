@@ -3,6 +3,7 @@ import utils
 import re
 import base64
 import binascii
+import pickle
 
 class Detect(object):
     def __init__(self, prompt, patterns):
@@ -41,6 +42,45 @@ class Detect(object):
             for match in pattern.finditer(self.prompt):
                 results.append(match.group())
             return results
+    #kind of messy, perhaps restructure our detection pipeline so models are opened at the beginning?
+    def BoW_malicious_scanner(self):
+        
+        with open('BoWModelMalicious.pkl', 'rb') as pickledModel:
+            model = pickle.load(pickledModel)
+        with open('vectorizer.pkl', 'rb') as pickledVectorizer:
+            vectorizer = pickle.load(pickledVectorizer)
+        
+        results = []
+        #simple sentence splitting. Definately want to make this more robust, but requires a more comprehensive NLP 
+        sentences = re.split(r'(?<=[.!?])\s+', self.prompt)
+        
+        sentenceResults = model.predict(vectorizer.transform(sentences))
+
+        for sentence, result in zip(sentences, sentenceResults):
+            if result == 1:
+                results.append(sentence)
+
+        return results
+
+    def BoW_scanner(self):
+            
+        with open('BoWModel.pkl', 'rb') as pickledModel:
+            model = pickle.load(pickledModel)
+         with open('vectorizer.pkl', 'rb') as pickledVectorizer:
+                vectorizer = pickle.load(pickledVectorizer)
+            
+    
+        results = []
+        #simple sentence splitting. Definately want to make this more robust, but requires a more comprehensive NLP 
+        sentences = re.split(r'(?<=[.!?])\s+', self.prompt)
+                    
+        sentenceResults = model.predict(vectorizer.transform(sentences))
+            
+        for sentence, result in zip(sentences, sentenceResults):
+            if result == 1:
+                 results.append(sentence) 
+                    
+        return results
 
 #   Wrap each occurrence of any substring in the argument in the prompt with start and end tags.
     # optional flag: extend_to_sentence_end will plac the end flag </flag> at the end of the current sentence.
