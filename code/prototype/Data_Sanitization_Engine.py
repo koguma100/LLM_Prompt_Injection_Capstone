@@ -52,6 +52,23 @@ def process_single(prompt, data, patterns):
         print("PREDICTION UPDATED -- AUTHORITY")
         print("authority overrides:", detected_authority_overrides)
     Detector.place_tags(detected_authority_overrides, start_tag="<flag>", end_tag="</flag>",extend_to_sentence_end=True)
+    
+    '''
+    detected_BoW_malicious_overrides = Detector.BoW_malicious_scanner()
+    if len(detected_BoW_malicious_overrides) > 0:
+            prompt.prediction = 1
+            print("PREDICTION UPDATED -- BoW(MALICIOUS)")
+    print("Predicted Malicious Sentences:", detected_BoW_malicious_overrides)
+    Detector.place_tags(detected_BoW_malicious_overrides, start_tag="<flag>", end_tag="</flag>",extend_to_sentence_end=True)
+    '''
+    
+    detected_BoW_overrides = Detector.BoW_malicious_scanner()
+    if len(detected_BoW_overrides) > 0:
+            prompt.prediction = 1
+            print("PREDICTION UPDATED -- BoW(MALICIOUS)")
+    print("Predicted Malicious Sentences:", detected_BoW_overrides)
+    Detector.place_tags(detected_BoW_overrides, start_tag="<flag>", end_tag="</flag>",extend_to_sentence_end=True)
+    
 
     Sanitizer = initialize_sanitizer(Detector.prompt)
     Sanitizer.redact()
