@@ -3,6 +3,7 @@ import utils
 import re
 import base64
 import binascii
+import pickle
 
 class Detect(object):
     def __init__(self, prompt, patterns):
