@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request
 #from ollama import chat
+from sanitizer.config import LLM_MODEL
 from sanitizer.pipeline import process_single
 
 
@@ -16,8 +17,8 @@ prompt_template = (
 def harden_prompt(prompt, data):
     return " ".join([prompt_template[0], prompt, prompt_template[1], data, prompt_template[2]])
 
-# Replace with model of choice
-model = "llama3:8b"
+# The model the pipeline uses (set in sanitizer/config.py), shown in the page footer
+model = LLM_MODEL
 
 @main.route("/", methods=["GET", "POST"])
 def home():

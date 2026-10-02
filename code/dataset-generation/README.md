@@ -34,6 +34,15 @@ python3 validate_injection_dataset.py injection_detector_dataset.csv
 
 For a quick test run, add `--max-blog-files 500` to the build command. Defaults are 3000 injection, 3000 benign-imperative and 6000 normal examples, with `--seed 42`. See the docstring in `build_injection_dataset.py` for the column schema.
 
+## 4. Train the detector
+
+The BoW training script reads the dataset from `code/training/`. Copy it there under the version name it expects, then train from `code/`:
+
+```bash
+cp injection_detector_dataset.csv ../training/injection_detector_datasetv2.csv
+cd .. && python training/train_bow.py
+```
+
 ## Citations
 
 ### Source datasets
