@@ -3,7 +3,7 @@
 # To evaluate a different dataset, add it to evaluation/samples.py as an element of the Prompts class
 # and pass it to ProgramData in main(). Outputs (stats, plots, false positives/negatives) go to code/results/.
 # Pulling from Hugging face: create a .sql file like the existing hugging-face/query.sql, then do duckdb < query.sql
-# to create a csv of the query results. Then use sanitizer.utils.csv_to_list to turn the csv into a python list
+# to create a csv of the query results. Then use evaluation.utils.csv_to_list to turn the csv into a python list
 # (I've been copying data from this output into samples.py, so another task could be automating this into a function).
 
 import os

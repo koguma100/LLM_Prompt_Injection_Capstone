@@ -1,9 +1,8 @@
 from nltk.tokenize import sent_tokenize
 
-from .detect import Detect
+from .detection import Detect
 from .sanitize import Sanitize
-from .prompt_hardening import test_output_validation
-from .api_call import local_llm_call
+from .llm import local_llm_call, test_output_validation
 
 
 class Sample(object):

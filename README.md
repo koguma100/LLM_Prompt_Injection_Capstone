@@ -43,7 +43,7 @@ Install [Ollama](https://ollama.com) and pull the model the pipeline calls:
 The trained BoW models (`.pkl`) and the datasets are not committed. Before running the engine, regenerate them:
 
 1. Build the injection detector dataset by following [code/dataset-generation/README.md](code/dataset-generation/README.md), then save it as `code/training/injection_detector_datasetv2.csv`.
-2. From `code/training/`, run `python BoW_model_trainingv2.py` and `python BoW_model_training_malicious_only_v2.py`. The models are saved to `code/models/`.
+2. From `code/`, run `python training/train_bow.py`. It trains both BoW models and saves them to `code/models/` (see `--help` for the dataset version and model options).
 
 ### Running
 
@@ -56,10 +56,10 @@ From the `code/` directory:
 ### Code layout
 
     code/
-    ├── sanitizer/           # detection, sanitization and LLM pipeline (importable package)
+    ├── sanitizer/           # detection, sanitization and LLM pipeline (importable package); settings in config.py
     ├── webapp/              # Flask web app
     ├── evaluation/          # batch evaluation script, labeled samples, Hugging Face queries
-    ├── training/            # BoW model training scripts
+    ├── training/            # BoW model training (train_bow.py)
     ├── dataset-generation/  # builds the injection detector dataset
     ├── tests/               # pytest unit tests
     ├── models/              # trained models (not committed)
