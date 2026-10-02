@@ -26,12 +26,12 @@ N/A
 ## Code Files for Review
 Please review the following code files, which were actively developed during this
 sprint, for quality:
-* Data_Sanitization_Engine.py: https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/main/code/prototype/Data_Sanitization_Engine.py
-* sanitize.py : https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/main/code/prototype/sanitize.py
-* base.html : https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/main/code/flask-app/app/templates/base.html
-* routes.py: https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/main/code/flask-app/app/routes.py
-* api_call.py: https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/main/code/prototype/api_call.py
-* prompt_hardening.py: https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/main/code/prototype/prompt_hardening.py
+* Data_Sanitization_Engine.py: https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/7d9ca5fe3c89d1db82658a0edb453e68bd03cb1c/code/prototype/Data_Sanitization_Engine.py
+* sanitize.py : https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/7d9ca5fe3c89d1db82658a0edb453e68bd03cb1c/code/prototype/sanitize.py
+* base.html : https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/7d9ca5fe3c89d1db82658a0edb453e68bd03cb1c/code/flask-app/app/templates/base.html
+* routes.py: https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/7d9ca5fe3c89d1db82658a0edb453e68bd03cb1c/code/flask-app/app/routes.py
+* api_call.py: https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/7d9ca5fe3c89d1db82658a0edb453e68bd03cb1c/code/prototype/api_call.py
+* prompt_hardening.py: https://github.com/koguma100/LLM_Prompt_Injection_Capstone/blob/7d9ca5fe3c89d1db82658a0edb453e68bd03cb1c/code/prototype/prompt_hardening.py
 ## Retrospective Summary
 Here's what went well:
 * Implemented full data pipeline and connected to UI

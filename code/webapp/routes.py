@@ -1,15 +1,7 @@
 from flask import Blueprint, render_template, request
 #from ollama import chat
-from .sanitization import process_single
-import sys
-import os
-
-# Add prototype directory to sys.path for imports
-prototype_dir = os.path.join(os.path.dirname(__file__), '../../prototype')
-if prototype_dir not in sys.path:
-    sys.path.insert(0, prototype_dir)
-
-from data import Patterns
+from sanitizer.patterns import Patterns
+from sanitizer.pipeline import Sample, process_single
 
 
 main = Blueprint("main", __name__)
@@ -53,7 +45,7 @@ def home():
         # )
 
         if prompt and data:
-            response3 = process_single(prompt, data, Patterns)
+            response3 = process_single(prompt, Sample(data), Patterns)
 
         print(response)
 

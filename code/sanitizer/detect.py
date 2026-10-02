@@ -1,4 +1,4 @@
-import utils
+from . import utils
 from sentence_transformers import SentenceTransformer
 import re
 import base64
@@ -9,8 +9,8 @@ import os
 
 model = SentenceTransformer('all-MiniLM-L6-v2')
 
-# pickled BoW models live next to this file, so detection works from any working directory
-MODEL_DIR = os.path.dirname(os.path.abspath(__file__))
+# pickled BoW models live in code/models/ (train them with code/training/), so detection works from any working directory
+MODEL_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'models')
 
 
 def split_into_clauses(sentence):

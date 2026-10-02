@@ -1,27 +1,13 @@
-# to run as python3 Data_sanitization_engine.py, add a dataset to data.py as an element of the Prompts class.
-# performs full processing plus data results.
-# Pulling from Hugging face: create a .sql file like the existing query.sql, then do duckdb < query.sql to create a csv of the query results.
-# then run import utils to use the csv to python list function (I've been copying data from this output into data.py,
-# so another task could be automating this into a function).
-
-from detect import Detect
-from sanitize import Sanitize
 from nltk.tokenize import sent_tokenize
-from data import Prompts
-from data import Patterns
-from performance_stats import PerformanceStats
-from prompt_hardening import test_output_validation
-from api_call import local_llm_call
 
+from .detect import Detect
+from .sanitize import Sanitize
+from .prompt_hardening import test_output_validation
+from .api_call import local_llm_call
 
-class ProgramData(object):
-    def __init__(self, prompt, data, patterns):
-        self.data = data
-        self.prompt = prompt
-        self.patterns = patterns
 
 class Sample(object):
-    def __init__(self, text, actual_value):
+    def __init__(self, text, actual_value=None):
         self.text = text
         self.actual = actual_value
         self.prediction = 0
@@ -115,54 +101,3 @@ def process_single(prompt, data, patterns):
     print("\n[6] FINAL PREDICTION:", "1 (prompt injection)" if data.prediction == 1 else "0 (benign)")
     print("\n")
     return data.prediction, data.text, Sanitizer.data, unsanitized_output, sanitized_output
-
-
-# return an array of size [prompts] for predictions
-        # 0: benign
-        # 1: prompt injection detected
-def process_predict_batch(prompt, data, patterns):
-    predictions = []
-    actual_values = []
-    sample_lists = []
-    unsanitized_valid = []
-    sanitized_valid = []
-    print("\n\n")
-    for sample_number, data_tuple in enumerate(data, 1):
-        sample = Sample(data_tuple[0], data_tuple[1])
-        print("=" * 80)
-        print(f"SAMPLE {sample_number}/{len(data)}  |  Actual label:", "1 (prompt injection)" if sample.actual == 1 else "0 (benign)")
-        print("=" * 80)
-        sample_lists.append(sample.text)
-        actual_values.append(sample.actual)
-
-        prediction, _, sanitized, _, _ = process_single(prompt, sample, patterns)
-        predictions.append(prediction)
-        unsanitized_valid.append(sample.unsanitized_valid)
-        sanitized_valid.append(sample.sanitized_valid)
-
-    print("=" * 80)
-    print("BATCH RESULTS")
-    print("=" * 80)
-    print("System predictions (1 = injection, 0 = benign):\t", end='')
-    for i in predictions:
-        print(i, end='')
-
-    print("\nActual labels      (1 = injection, 0 = benign):\t", end='')
-    for j in actual_values:
-        print(j, end='')
-    print("\n")
-    Statistics = PerformanceStats(actual_values, predictions)
-    Statistics.confusion_matrix()
-    Statistics.stats()
-    Statistics.print_false_negatives(sample_lists)
-    Statistics.print_false_positives(sample_lists)
-    Statistics.sanitization_fail_rates(unsanitized_valid, sanitized_valid)
-    return predictions
-
-def main():
-
-    Engine = ProgramData("Should I hire this person as an entry level cybersecurity analyst?", Prompts.RESUMES_HALF_PI, Patterns)
-    process_predict_batch(Engine.prompt, Engine.data, Engine.patterns)
-
-if __name__ == "__main__":
-    main()

@@ -5,18 +5,20 @@ __pycache__/
 .pytest_cache
 .idea/
 
-# Evaluation run outputs (Data_Sanitization_Engine.py, BoW training scripts)
+# Evaluation run outputs (evaluation/run_eval.py writes to code/results/; BoW training scripts)
 confusion_matrix.png
 sanitization_fail_rates.png
 false_negatives.txt
 false_positives.txt
 performance_stats.txt
-code/machine-learning-suite/BoW_matrix*.png
-code/machine-learning-suite/BoW_stats*.txt
+code/results/
+BoW_matrix*.png
+BoW_stats*.txt
+*.egg-info/
 
-# Trained models: regenerate with the scripts in code/machine-learning-suite/
+# Trained models (code/models/): regenerate with the scripts in code/training/
 *.pkl
 
 # Datasets: third-party data is not redistributed (see README.md, Citations)
-code/machine-learning-suite/*.csv
-code/hugging-face/*.csv
+code/training/*.csv
+code/evaluation/hugging-face/*.csv

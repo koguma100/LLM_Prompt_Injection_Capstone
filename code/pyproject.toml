@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+# Makes sanitizer/ and webapp/ importable from anywhere. Dependencies live in requirements.txt,
+# which installs this project with `-e .`.
+[project]
+name = "llm-prompt-injection-sanitizer"
+version = "0.1.0"
+requires-python = ">=3.10"
+
+[tool.setuptools.packages.find]
+include = ["sanitizer*", "webapp*", "evaluation*"]
+
+[tool.setuptools.package-data]
+webapp = ["templates/*.html"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

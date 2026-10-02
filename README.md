@@ -32,23 +32,39 @@ In positions where users – researchers, professors, and recruiters – take in
 
 ### Installation Steps
 
-For running the Data_Sanitization_Engine.py, run:
+From the `code/` directory, install the dependencies and this project's packages:
 
-    pip install -r requirements.txt (in code directory)
+    pip install -r requirements.txt
+
+Install [Ollama](https://ollama.com) and pull the model the pipeline calls:
+
+    ollama pull phi3:mini
 
 The trained BoW models (`.pkl`) and the datasets are not committed. Before running the engine, regenerate them:
 
-1. Build the injection detector dataset by following [code/dataset-generation/README.md](code/dataset-generation/README.md), then save it as `code/machine-learning-suite/injection_detector_datasetv2.csv`.
-2. From `code/machine-learning-suite/`, run `python BoW_model_trainingv2.py` and `python BoW_model_training_malicious_only_v2.py`.
-3. Copy the resulting `BoWModel.pkl`, `BoWModelMalicious.pkl` and `vectorizer.pkl` into `code/prototype/`.
+1. Build the injection detector dataset by following [code/dataset-generation/README.md](code/dataset-generation/README.md), then save it as `code/training/injection_detector_datasetv2.csv`.
+2. From `code/training/`, run `python BoW_model_trainingv2.py` and `python BoW_model_training_malicious_only_v2.py`. The models are saved to `code/models/`.
 
-For running the Flask app install:
+### Running
 
-Flask, Ollama, Ollama model of choice (modify code)
+From the `code/` directory:
 
-Then run:
+    python -m evaluation.run_eval   # batch evaluation; stats and plots go to code/results/
+    python -m webapp                # web app at http://127.0.0.1:5000
+    pytest                          # unit tests
 
-    python run.py
+### Code layout
+
+    code/
+    ├── sanitizer/           # detection, sanitization and LLM pipeline (importable package)
+    ├── webapp/              # Flask web app
+    ├── evaluation/          # batch evaluation script, labeled samples, Hugging Face queries
+    ├── training/            # BoW model training scripts
+    ├── dataset-generation/  # builds the injection detector dataset
+    ├── tests/               # pytest unit tests
+    ├── models/              # trained models (not committed)
+    ├── results/             # evaluation outputs (not committed)
+    └── legacy/              # unused older code, kept for reference
 
 Future development will provide a Dockerfile to bypass manually entering the above steps.
 
@@ -80,8 +96,8 @@ Poster submitted for VICEROY Symposium: https://github.com/koguma100/LLM_Prompt_
 
 | Resource | Used in | License |
 | --- | --- | --- |
-| [jayavibhav/prompt-injection](https://huggingface.co/datasets/jayavibhav/prompt-injection) | Labeled test samples (`code/hugging-face/query.sql`) | Not stated |
-| [opensporks/resumes](https://huggingface.co/datasets/opensporks/resumes) (mirror of Kaggle [snehaanbhawal/resume-dataset](https://www.kaggle.com/datasets/snehaanbhawal/resume-dataset)) | Resume test data (`code/hugging-face/query-resumes.sql`) | CC0 1.0 |
+| [jayavibhav/prompt-injection](https://huggingface.co/datasets/jayavibhav/prompt-injection) | Labeled test samples (`code/evaluation/hugging-face/query.sql`) | Not stated |
+| [opensporks/resumes](https://huggingface.co/datasets/opensporks/resumes) (mirror of Kaggle [snehaanbhawal/resume-dataset](https://www.kaggle.com/datasets/snehaanbhawal/resume-dataset)) | Resume test data (`code/evaluation/hugging-face/query-resumes.sql`) | CC0 1.0 |
 | [Blog Authorship Corpus](https://u.cs.biu.ac.il/~koppel/BlogCorpus.htm) | Injection detector dataset (`code/dataset-generation`) | Non-commercial research use |
 | [HuggingFaceH4/instruction-dataset](https://huggingface.co/datasets/HuggingFaceH4/instruction-dataset) | Injection detector dataset (`code/dataset-generation`) | Apache 2.0 |
 | [databricks/databricks-dolly-15k](https://huggingface.co/datasets/databricks/databricks-dolly-15k) | Injection detector dataset (`code/dataset-generation`) | CC BY-SA 3.0 |

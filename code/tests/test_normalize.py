@@ -1,6 +1,6 @@
 import base64
 
-from normalize_fuzzy import normalize_prompt, normalize_with_map
+from sanitizer.normalize import normalize_prompt, normalize_with_map
 
 # --- Unicode Normalization ---
 def test_fullwidth_characters():

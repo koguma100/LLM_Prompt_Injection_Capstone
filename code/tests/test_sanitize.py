@@ -1,5 +1,5 @@
 import unittest
-from sanitize import Sanitize
+from sanitizer.sanitize import Sanitize
 
 # (input_text, detected_spans, expected_output)
 TEST_CASES = [

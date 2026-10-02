@@ -1,7 +1,7 @@
 # Install with: pip install -r requirements.txt (from the code/ directory)
 # The pipeline also needs a local Ollama server (https://ollama.com) running the phi3:mini model.
 
-# Sanitization engine (prototype/)
+# Sanitization engine (sanitizer/)
 requests
 numpy
 scipy
@@ -13,12 +13,15 @@ confusables
 # Evaluation stats and plots
 matplotlib
 
-# Web app (flask-app/)
+# Web app (webapp/)
 Flask
 
-# BoW training (machine-learning-suite/) and dataset generation (dataset-generation/)
+# BoW training (training/) and dataset generation (dataset-generation/)
 pandas
 datasets
 
 # Tests
 pytest
+
+# This project's own packages (sanitizer, webapp, evaluation), installed in editable mode
+-e .
