@@ -8,6 +8,9 @@ from scipy.stats import entropy
 
 # Calculate Shannon entropy. 0 -> less random (language), higher -> more random (encoding)
 def calculate_entropy(s):
+    # decoded Base64 is bytes; latin-1 maps each byte to one character, so the entropy is per byte
+    if isinstance(s, bytes):
+        s = s.decode('latin-1')
     # Remove Base64 padding for entropy calculation
     s = s.rstrip('=')
     if not s or len(s) < 10:  # Add minimum length check
