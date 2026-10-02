@@ -36,6 +36,12 @@ For running the Data_Sanitization_Engine.py, run:
 
     pip install -r requirements.txt (in code directory)
 
+The trained BoW models (`.pkl`) and the datasets are not committed. Before running the engine, regenerate them:
+
+1. Build the injection detector dataset by following [code/dataset-generation/README.md](code/dataset-generation/README.md), then save it as `code/machine-learning-suite/injection_detector_datasetv2.csv`.
+2. From `code/machine-learning-suite/`, run `python BoW_model_trainingv2.py` and `python BoW_model_training_malicious_only_v2.py`.
+3. Copy the resulting `BoWModel.pkl`, `BoWModelMalicious.pkl` and `vectorizer.pkl` into `code/prototype/`.
+
 For running the Flask app install:
 
 Flask, Ollama, Ollama model of choice (modify code)
