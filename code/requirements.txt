@@ -1,7 +1,24 @@
-Flask
+# Install with: pip install -r requirements.txt (from the code/ directory)
+# The pipeline also needs a local Ollama server (https://ollama.com) running the phi3:mini model.
+
+# Sanitization engine (prototype/)
 requests
-scikit-learn
-matplotlib
-scipy
 numpy
+scipy
+nltk
+sentence-transformers
+scikit-learn
+confusables
+
+# Evaluation stats and plots
+matplotlib
+
+# Web app (flask-app/)
+Flask
+
+# BoW training (machine-learning-suite/) and dataset generation (dataset-generation/)
+pandas
 datasets
+
+# Tests
+pytest

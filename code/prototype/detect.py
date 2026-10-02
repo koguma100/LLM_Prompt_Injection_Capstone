@@ -5,8 +5,12 @@ import base64
 import numpy as np
 import binascii
 import pickle
+import os
 
 model = SentenceTransformer('all-MiniLM-L6-v2')
+
+# pickled BoW models live next to this file, so detection works from any working directory
+MODEL_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def split_into_clauses(sentence):
@@ -33,8 +37,8 @@ class Detect(object):
                 decoded = base64.b64decode(substring, validate=True)
 
                 # calculate entropy of the substring
-                entropy_substring = utils.calcualate_entropy(substring)
-                entropy_decoded = utils.calcualate_entropy(decoded)
+                entropy_substring = utils.calculate_entropy(substring)
+                entropy_decoded = utils.calculate_entropy(decoded)
 
                 # evaluate the entropies of the Base64 and its decoded counter to determine if this portion should be flagged:
                     # entropy of plaintext: about 1-1.5
@@ -57,42 +61,29 @@ class Detect(object):
             return results
     #kind of messy, perhaps restructure our detection pipeline so models are opened at the beginning?
     def BoW_malicious_scanner(self):
-        
-        with open('BoWModelMalicious.pkl', 'rb') as pickledModel:
+        return self._BoW_scan('BoWModelMalicious.pkl')
+
+    def BoW_scanner(self):
+        return self._BoW_scan('BoWModel.pkl')
+
+    def _BoW_scan(self, model_filename):
+        with open(os.path.join(MODEL_DIR, model_filename), 'rb') as pickledModel:
             model = pickle.load(pickledModel)
-        with open('vectorizer.pkl', 'rb') as pickledVectorizer:
+        with open(os.path.join(MODEL_DIR, 'vectorizer.pkl'), 'rb') as pickledVectorizer:
             vectorizer = pickle.load(pickledVectorizer)
-        
+
         results = []
-        #simple sentence splitting. Definately want to make this more robust, but requires a more comprehensive NLP 
+        if not self.prompt or not isinstance(self.prompt, str):
+            return results
+        #simple sentence splitting. Definately want to make this more robust, but requires a more comprehensive NLP
         sentences = re.split(r'(?<=[.!?])\s+', self.prompt)
-        
+
         sentenceResults = model.predict(vectorizer.transform(sentences))
 
         for sentence, result in zip(sentences, sentenceResults):
             if result == 1:
                 results.append(sentence)
 
-        return results
-
-    def BoW_scanner(self):
-            
-        with open('BoWModel.pkl', 'rb') as pickledModel:
-            model = pickle.load(pickledModel)
-         with open('vectorizer.pkl', 'rb') as pickledVectorizer:
-                vectorizer = pickle.load(pickledVectorizer)
-            
-    
-        results = []
-        #simple sentence splitting. Definately want to make this more robust, but requires a more comprehensive NLP 
-        sentences = re.split(r'(?<=[.!?])\s+', self.prompt)
-                    
-        sentenceResults = model.predict(vectorizer.transform(sentences))
-            
-        for sentence, result in zip(sentences, sentenceResults):
-            if result == 1:
-                 results.append(sentence) 
-                    
         return results
 
 #   Wrap each occurrence of any substring in the argument in the prompt with start and end tags.

@@ -45,22 +45,22 @@ def process_single(prompt, data, patterns):
         data.prediction = 1
         print("    Outlier clauses (semantic outliers):", outlier_clauses)
 
-    # use the detection functions
-
     detected_instruction_overrides = Detector.regex_scanner(patterns.INSTRUCTION_OVERRIDE_PATTERN)
     if len(detected_instruction_overrides) > 0:
         data.prediction = 1
-        print("PREDICTION UPDATED -- INSTRUCTION")
-        print("instruction overrides:", detected_instruction_overrides)
-    Detector.place_tags(detected_instruction_overrides, start_tag="<flag>", end_tag="</flag>",
-                        extend_to_sentence_end=True)
+        print("    Instruction override matches (regex):", detected_instruction_overrides)
 
     detected_authority_overrides = Detector.regex_scanner(patterns.AUTHORITY_PATTERN)
     if len(detected_authority_overrides) > 0:
         data.prediction = 1
         print("    Authority override matches (regex):", detected_authority_overrides)
 
-    all_detections = detected_instruction_overrides + detected_authority_overrides + outlier_clauses
+    detected_BoW_overrides = Detector.BoW_malicious_scanner()
+    if len(detected_BoW_overrides) > 0:
+        data.prediction = 1
+        print("    Malicious sentences (BoW model):", detected_BoW_overrides)
+
+    all_detections = detected_instruction_overrides + detected_authority_overrides + outlier_clauses + detected_BoW_overrides
     if not all_detections:
         print("    No prompt injections detected")
 
@@ -76,26 +76,6 @@ def process_single(prompt, data, patterns):
     ]
 
     full_sentence_detections = [d for d in all_detections if d not in embedded_detections]
-        print("PREDICTION UPDATED -- AUTHORITY")
-        print("authority overrides:", detected_authority_overrides)
-    Detector.place_tags(detected_authority_overrides, start_tag="<flag>", end_tag="</flag>",extend_to_sentence_end=True)
-
-    '''
-    detected_BoW_malicious_overrides = Detector.BoW_malicious_scanner()
-    if len(detected_BoW_malicious_overrides) > 0:
-            prompt.prediction = 1
-            print("PREDICTION UPDATED -- BoW(MALICIOUS)")
-    print("Predicted Malicious Sentences:", detected_BoW_malicious_overrides)
-    Detector.place_tags(detected_BoW_malicious_overrides, start_tag="<flag>", end_tag="</flag>",extend_to_sentence_end=True)
-    '''
-
-    detected_BoW_overrides = Detector.BoW_malicious_scanner()
-    if len(detected_BoW_overrides) > 0:
-            prompt.prediction = 1
-            print("PREDICTION UPDATED -- BoW(MALICIOUS)")
-    print("Predicted Malicious Sentences:", detected_BoW_overrides)
-    Detector.place_tags(detected_BoW_overrides, start_tag="<flag>", end_tag="</flag>",extend_to_sentence_end=True)
-
 
     Sanitizer = initialize_sanitizer(data.text)
 
@@ -119,14 +99,7 @@ def process_single(prompt, data, patterns):
     unsanitized_output = local_llm_call(f"{prompt}\n\nResume:\n{data.text}")
     print("\n[4] LLM RESPONSES:")
     print("    Response to UNSANITIZED data:", unsanitized_output)
-    Sanitizer = initialize_sanitizer(Detector.prompt)
-    Sanitizer.redact()
-    print("SANITIZED DATA:\t", Sanitizer.data,)
 
-    output = local_llm_call(f"{prompt}\n\nResume:\n{Sanitizer.data}")
-    print("LLM OUTPUT:\t\t", output)
-
-    test_output_validation(prompt, output)
     # Get LLM response with sanitized data
     sanitized_output = local_llm_call(f"{prompt}\n\nResume:\n{Sanitizer.data}")
     print("    Response to SANITIZED data:  ", sanitized_output)
@@ -141,7 +114,7 @@ def process_single(prompt, data, patterns):
         data.prediction = 1
     print("\n[6] FINAL PREDICTION:", "1 (prompt injection)" if data.prediction == 1 else "0 (benign)")
     print("\n")
-    return data.prediction, Sanitizer.data
+    return data.prediction, data.text, Sanitizer.data, unsanitized_output, sanitized_output
 
 
 # return an array of size [prompts] for predictions
@@ -150,8 +123,6 @@ def process_single(prompt, data, patterns):
 def process_predict_batch(prompt, data, patterns):
     predictions = []
     actual_values = []
-
-    for data_tuple in data:
     sample_lists = []
     unsanitized_valid = []
     sanitized_valid = []
@@ -191,7 +162,6 @@ def process_predict_batch(prompt, data, patterns):
 def main():
 
     Engine = ProgramData("Should I hire this person as an entry level cybersecurity analyst?", Prompts.RESUMES_HALF_PI, Patterns)
-    Engine = ProgramData("Should I hire this person as an entry level cybersecurity analyst?", Prompts.RESUMES, Patterns)
     process_predict_batch(Engine.prompt, Engine.data, Engine.patterns)
 
 if __name__ == "__main__":
