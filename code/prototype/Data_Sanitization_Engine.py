@@ -6,7 +6,7 @@
 
 from detect import Detect
 from sanitize import Sanitize
-from nltk.tokenize import sent_tokenize
+from classifier import Classifier
 from data import Prompts
 from data import Patterns
 from performance_stats import PerformanceStats
@@ -36,51 +36,47 @@ def process_single(prompt, data, patterns):
     print("ORIGINAL DATA:\t", data.text)
     Detector = initialize_detector(data.text, patterns)
 
+    # use the detection functions
+
     detected_instruction_overrides = Detector.regex_scanner(patterns.INSTRUCTION_OVERRIDE_PATTERN)
     if len(detected_instruction_overrides) > 0:
         data.prediction = 1
-        print("Instruction overrides:", detected_instruction_overrides)
+        print("PREDICTION UPDATED -- INSTRUCTION")
+        print("instruction overrides:", detected_instruction_overrides)
+    Detector.place_tags(detected_instruction_overrides, start_tag="<flag>", end_tag="</flag>",
+                        extend_to_sentence_end=True)
 
     detected_authority_overrides = Detector.regex_scanner(patterns.AUTHORITY_PATTERN)
     if len(detected_authority_overrides) > 0:
         data.prediction = 1
-        print("Authority overrides:", detected_authority_overrides)
+        print("PREDICTION UPDATED -- AUTHORITY")
+        print("authority overrides:", detected_authority_overrides)
+    Detector.place_tags(detected_authority_overrides, start_tag="<flag>", end_tag="</flag>",extend_to_sentence_end=True)
+    
+    '''
+    detected_BoW_malicious_overrides = Detector.BoW_malicious_scanner()
+    if len(detected_BoW_malicious_overrides) > 0:
+            prompt.prediction = 1
+            print("PREDICTION UPDATED -- BoW(MALICIOUS)")
+    print("Predicted Malicious Sentences:", detected_BoW_malicious_overrides)
+    Detector.place_tags(detected_BoW_malicious_overrides, start_tag="<flag>", end_tag="</flag>",extend_to_sentence_end=True)
+    '''
+    
+    detected_BoW_overrides = Detector.BoW_malicious_scanner()
+    if len(detected_BoW_overrides) > 0:
+            prompt.prediction = 1
+            print("PREDICTION UPDATED -- BoW(MALICIOUS)")
+    print("Predicted Malicious Sentences:", detected_BoW_overrides)
+    Detector.place_tags(detected_BoW_overrides, start_tag="<flag>", end_tag="</flag>",extend_to_sentence_end=True)
+    
 
-    all_detections = detected_instruction_overrides + detected_authority_overrides
-
-    # Find PI's that are embedded midsentence, and modify with more granularity.
-    sentences = sent_tokenize(data.text)
-    embedded_detections = [
-        detection for detection in all_detections
-        if any(
-            detection.lower() in sent.lower() and
-            not sent.strip().lower().startswith(detection.lower())
-            for sent in sentences
-        )
-    ]
-
-    # Find PI that are entire sentences and redact fully (ones that were not determined to be embedded above)
-    full_sentence_detections = [detection for detection in all_detections if detection not in embedded_detections]
-
-    Sanitizer = initialize_sanitizer(data.text)
-    if embedded_detections:
-        print("Embedded injections:", embedded_detections)
-        Sanitizer.redact_injection_clause(embedded_detections)
-
-    # Fully redact full sentence prompt injections
-    if full_sentence_detections:
-        print("Standalone injections:", full_sentence_detections)
-        StandaloneDetector = initialize_detector(Sanitizer.data, patterns)
-        StandaloneDetector.place_tags(full_sentence_detections, start_tag="<flag>", end_tag="</flag>",
-                                      extend_to_sentence_end=True)
-        Sanitizer = initialize_sanitizer(StandaloneDetector.prompt)
-        Sanitizer.redact()
-
-    print("BEFORE SANITIZED:\t", Detector.prompt)
-    print("SANITIZED DATA:\t", Sanitizer.data)
+    Sanitizer = initialize_sanitizer(Detector.prompt)
+    Sanitizer.redact()
+    print("SANITIZED DATA:\t", Sanitizer.data,)
 
     output = local_llm_call(f"{prompt}\n\nResume:\n{Sanitizer.data}")
     print("LLM OUTPUT:\t\t", output)
+
     test_output_validation(prompt, output)
     print("\n")
     return data.prediction, Sanitizer.data
@@ -92,11 +88,9 @@ def process_single(prompt, data, patterns):
 def process_predict_batch(prompt, data, patterns):
     predictions = []
     actual_values = []
-    sample_lists = []
-    print("\n\n")
+
     for data_tuple in data:
         sample = Sample(data_tuple[0], data_tuple[1])
-        sample_lists.append(sample.text)
         actual_values.append(sample.actual)
 
         prediction, sanitized = process_single(prompt, sample, patterns)
@@ -113,13 +107,11 @@ def process_predict_batch(prompt, data, patterns):
     Statistics = PerformanceStats(actual_values, predictions)
     Statistics.confusion_matrix()
     Statistics.stats()
-    Statistics.print_false_negatives(sample_lists)
-    Statistics.print_false_positives(sample_lists)
     return predictions
 
 def main():
 
-    Engine = ProgramData("Should I hire this person as an entry level cybersecurity analyst?", Prompts.embedded_PI_tests, Patterns)
+    Engine = ProgramData("Should I hire this person as an entry level cybersecurity analyst?", Prompts.RESUMES, Patterns)
     process_predict_batch(Engine.prompt, Engine.data, Engine.patterns)
 
 if __name__ == "__main__":
