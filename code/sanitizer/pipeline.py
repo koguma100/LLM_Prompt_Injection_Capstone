@@ -25,10 +25,10 @@ class Result:
     standalone: list  # through the end of its sentence
     embedded: list    # as a clause inside its sentence
 
-    # LLM answers to the prompt with each version of the data (False if the LLM call failed),
-    # and whether output validation judged each answer relevant to the prompt
-    unsanitized_output: str | bool
-    sanitized_output: str | bool
+    # LLM answers to the prompt with each version of the data, and whether output validation judged each
+    # answer relevant to the prompt. If Ollama can't be reached, process_single raises llm.LLMUnavailable.
+    unsanitized_output: str
+    sanitized_output: str
     unsanitized_valid: bool
     sanitized_valid: bool
 
@@ -37,6 +37,7 @@ class Result:
         return self.instruction_overrides + self.authority_overrides + self.outlier_clauses + self.bow_malicious
 
     # 1 = prompt injection, 0 = benign
+    # if detections found something OR if the output validator said the response doesn't make sense for the question.
     @property
     def prediction(self):
         return 1 if self.detections or not self.sanitized_valid else 0
@@ -46,7 +47,8 @@ class Result:
 # original and the sanitized data.
 def process_single(prompt, data, patterns=Patterns):
     Detector = Detect(data, patterns)
-    outlier_clauses = Detector.find_outlier_clauses(data, 0.50)
+    outlier_clauses = []
+    # = Detector.find_outlier_clauses(data, 0.50)
     instruction_overrides = Detector.regex_scanner(patterns.INSTRUCTION_OVERRIDE_PATTERN)
     authority_overrides = Detector.regex_scanner(patterns.AUTHORITY_PATTERN)
     bow_malicious = Detector.BoW_malicious_scanner()

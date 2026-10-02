@@ -43,3 +43,11 @@ def test_debug_mode_comes_from_environment(env, expected):
             os.environ.pop("FLASK_DEBUG", None)
         runpy.run_module("webapp", run_name="__main__")
     run.assert_called_once_with(debug=expected)
+
+
+def test_shows_error_when_ollama_is_down():
+    from sanitizer.llm import LLMUnavailable
+    with mock.patch.object(routes, "process_single", side_effect=LLMUnavailable("down")):
+        resp = create_app().test_client().post("/", data={"prompt": "Summarize.", "data": "Some data."})
+    assert resp.status_code == 200
+    assert "Could not reach the LLM" in resp.data.decode()

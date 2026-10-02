@@ -35,6 +35,13 @@ Pull the model the pipeline calls (to use a different one, change `LLM_MODEL` in
 
     ollama pull phi3:mini
 
+Turn off Ollama's prompt cache. By default its model server keeps every processed prompt in RAM, up to 8 GB, and long evaluation runs fill it until the machine runs out of memory and the model is killed. The evaluation never reuses a prompt, so nothing is lost. On Linux, run `sudo systemctl edit ollama`, add the lines below, and then run `sudo systemctl restart ollama`:
+
+    [Service]
+    Environment="LLAMA_ARG_CACHE_RAM=0"
+
+`journalctl -u ollama | grep "prompt cache"` should then show "prompt cache is disabled".
+
 The trained BoW models (`.pkl`) and the training datasets are not committed. Before running the engine, regenerate them:
 
 1. Build the injection detector dataset by following [code/dataset-generation/README.md](code/dataset-generation/README.md), then save it as `code/training/injection_detector_datasetv2.csv`.
@@ -48,7 +55,20 @@ From the `code/` directory:
     python -m webapp                # web app at http://127.0.0.1:5000
     pytest                          # unit tests
 
-`run_eval` evaluates the `resumes_half_pi` sample set with a hiring question by default. Choose another set or prompt with `--samples` and `--prompt`; `--help` lists the sample sets. Each set is a CSV with `text,label` columns (1 = prompt injection, 0 = benign) in `code/evaluation/data/`, so a new set can be added by saving a CSV there.
+`run_eval` evaluates the `resumes_half_pi` sample set with a hiring question by default. `--samples` takes a sample set name (the CSVs in `code/evaluation/data/`; `--help` lists them) or the path to any CSV with `text` and `label` columns (1 = prompt injection, 0 = benign), and `--prompt` changes the question. For example, to evaluate the BoW training dataset:
+
+    python -m evaluation.run_eval --samples training/injection_detector_datasetv2.csv --holdout --limit 500 --quiet
+
+Each sample takes about 10 seconds (four LLM calls), so a whole 12,000-row training CSV would take over a day:
+
+- `--limit N` evaluates a random subset of N samples (`--seed` picks a different subset)
+- `--holdout` keeps only the 20% of rows `train_bow.py` held out from training, so the BoW model isn't scored on text it was trained on. Use it with the CSV the current models were trained on.
+- `--quiet` prints one progress line per sample, with an estimate of the time left, instead of the full report
+- `--resume` continues a run that stopped: rerun the same command with `--resume` and it skips the samples already in `predictions.csv`
+
+If Ollama goes down mid-run (for example when the machine runs out of memory and the model process is killed), `run_eval` waits for it to come back for up to `--wait` minutes (default 10) and retries the sample. If it stays down, or you press Ctrl+C, the run stops and still writes the stats for the samples it finished.
+
+Results go to `code/results/<sample set name>/` (or `--out`): `confusion_matrix.png`, `performance_stats.txt` (accuracy, precision, recall, F1), `false_positives.txt`, `false_negatives.txt`, `sanitization_fail_rates.png`, and `predictions.csv`, which has one row per sample and is written as the run goes.
 
 The web app runs with debug mode off. Set `FLASK_DEBUG=1` to turn on the debugger and auto-reload while developing.
 

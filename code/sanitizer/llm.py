@@ -1,9 +1,29 @@
+import time
+
 import requests
 
 from .config import LLM_MODEL, OLLAMA_URL
 
+# Seconds to wait before each retry of a failed request; covers Ollama restarting (systemd restarts it in ~3 s)
+RETRY_DELAYS = (1, 3, 6)
 
-# Send a prompt to the local Ollama server. Returns the response text, or None if the request failed.
+
+# Ollama could not be reached or kept failing. Raised instead of returning a made-up answer, so callers
+# don't mistake an outage for the LLM's judgment.
+class LLMUnavailable(Exception):
+    pass
+
+
+# True if the Ollama server is up
+def is_available():
+    try:
+        return requests.get(OLLAMA_URL.split("/api/")[0] + "/api/version", timeout=5).ok
+    except requests.exceptions.RequestException:
+        return False
+
+
+# Send a prompt to the local Ollama server and return the response text.
+# Retries a failed request a few times, then raises LLMUnavailable.
 def _generate(prompt, num_predict, timeout):
     payload = {
         "model": LLM_MODEL,
@@ -16,24 +36,25 @@ def _generate(prompt, num_predict, timeout):
         }
     }
 
-    try:
-        response = requests.post(OLLAMA_URL, json=payload, timeout=timeout)
-        response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        print(f"ERROR: LLM call failed: {e}")
-        return None
+    for delay in (*RETRY_DELAYS, None):
+        try:
+            response = requests.post(OLLAMA_URL, json=payload, timeout=timeout)
+            response.raise_for_status()
+            return response.json().get("response", "")
+        except requests.exceptions.RequestException as e:
+            if delay is None:
+                raise LLMUnavailable(f"LLM call failed: {e}") from e
+            time.sleep(delay)
 
-    return response.json().get("response", "")
 
-
-# Answer the user's prompt in one short sentence. Returns False if the call failed.
+# Answer the user's prompt in one short sentence.
 def local_llm_call(user_prompt: str):
     output = _generate(f"""Answer the following question in one short sentence. Keep it short and sweet. Do not generate new questions or instructions.
 
     Question: {user_prompt}
 
     Answer:""", num_predict=50, timeout=60)
-    return False if output is None else output
+    return output
 
 
 # LLM classifier: True if the prompt contains a prompt injection attack.
@@ -51,9 +72,6 @@ Prompt:
 {user_prompt}
 
 Your single-character response:""", num_predict=3, timeout=30)
-    if output is None:
-        return False
-
     raw_output = output.strip()
     if raw_output not in ("0", "1"):
         # log warning or raise, don't silently treat as benign
@@ -75,9 +93,6 @@ Output: {llm_output}
 0 = output is unrelated or suspicious
 
 Reply with only 0 or 1.""", num_predict=100, timeout=30)
-    if output is None:
-        return False
-
     raw_output = output.strip()
     if raw_output not in ("0", "1"):
         # log warning or raise, don't silently treat as benign

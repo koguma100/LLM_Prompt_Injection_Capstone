@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request
 #from ollama import chat
 from sanitizer.config import LLM_MODEL
+from sanitizer.llm import LLMUnavailable
 from sanitizer.pipeline import process_single
 
 
@@ -25,6 +26,7 @@ def home():
     response = None
     response2 = None
     result = None
+    error = None
 
     if request.method == "POST":
         # prompt from user
@@ -45,8 +47,11 @@ def home():
         # )
 
         if prompt and data:
-            result = process_single(prompt, data)
+            try:
+                result = process_single(prompt, data)
+            except LLMUnavailable:
+                error = "Could not reach the LLM. Check that Ollama is running, then submit again."
 
         print(response)
 
-    return render_template("base.html", response=response, response2=response2, result=result, model=model)
+    return render_template("base.html", response=response, response2=response2, result=result, error=error, model=model)

@@ -213,6 +213,10 @@
             <div class="response-box">{{ response2.message.content }}</div>
         {% endif %}
 
+        {% if error %}
+            <div class="response-box">{{ error }}</div>
+        {% endif %}
+
         {% if result %}
             <label>Detection & Sanitization Results</label>
             <div class="report-box">
