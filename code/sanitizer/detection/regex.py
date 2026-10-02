@@ -1,5 +1,13 @@
 import re
 
+_SENTENCE_END = re.compile(r'(?<=[.!?])\s+|$')
+
+
+# Index where the sentence containing text[pos - 1] ends. Searches the full text from pos (rather than a slice)
+# so the lookbehind can see a sentence-ending "." right before pos.
+def sentence_end(text, pos):
+    return _SENTENCE_END.search(text, pos).start()
+
 
 def regex_scan(text, pattern):
     results = []
@@ -30,8 +38,6 @@ def place_tags(text, substrings, start_tag="<flag>", end_tag="</flag>", extend_t
 
         return pattern.sub(replacer, text)
 
-    sentence_end_pattern = r'(?<=[.!?])\s+|$'
-
     for substring in substrings:
         # Find all occurrences of the substring
         pattern = re.compile(re.escape(substring))
@@ -43,13 +49,7 @@ def place_tags(text, substrings, start_tag="<flag>", end_tag="</flag>", extend_t
             start_pos = match.start() + offset
             end_pos = match.end() + offset
 
-            text_after = text[end_pos:]
-            sentence_end_match = re.search(sentence_end_pattern, text_after)
-
-            if sentence_end_match:
-                sentence_end_pos = end_pos + sentence_end_match.start()
-            else:
-                sentence_end_pos = len(text)
+            sentence_end_pos = sentence_end(text, end_pos)
 
             replacements.append((start_pos, sentence_end_pos,
                                  f"{start_tag}{text[start_pos:sentence_end_pos]}{end_tag}"))

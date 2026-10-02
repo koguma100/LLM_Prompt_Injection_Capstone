@@ -1,6 +1,8 @@
 import re
 from nltk.tokenize import sent_tokenize
 
+from .detection.regex import sentence_end
+
 # Conjunctions/prepositions that can dangle at either end of a cut
 _TRAILING_JOINERS = re.compile(
     r'\s+(and|or|with|for|to|but|yet|so|while|as|by)\s*$',
@@ -37,6 +39,27 @@ class Sanitize(object):
 
     def redact(self) -> str:
         self.data = re.sub(r'<flag>.*?</flag>', '[REDACTED]', self.data, flags=re.DOTALL)
+        return self.data
+
+    # Replace each detection, through the end of its sentence, with [REDACTED].
+    # Overlapping detections are merged so they produce a single [REDACTED].
+    def redact_sentences(self, matched_spans: list[str]) -> str:
+        spans = []
+        for matched_span in set(matched_spans):
+            if not matched_span or not matched_span.strip():
+                continue
+            for match in re.finditer(re.escape(matched_span), self.data):
+                spans.append((match.start(), sentence_end(self.data, match.end())))
+
+        merged = []
+        for start, end in sorted(spans):
+            if merged and start < merged[-1][1]:
+                merged[-1][1] = max(merged[-1][1], end)
+            else:
+                merged.append([start, end])
+
+        for start, end in reversed(merged):
+            self.data = self.data[:start] + '[REDACTED]' + self.data[end:]
         return self.data
 
     def redact_injection_clause(self, matched_spans: list[str]) -> str:

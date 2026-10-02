@@ -64,17 +64,14 @@ def process_single(prompt, data, patterns):
 
     Sanitizer = initialize_sanitizer(data.text)
 
+    # Redact whole sentences first, so a clause redaction can't change a flagged sentence before it's removed
+    if full_sentence_detections:
+        print("    Standalone injections (redacting full sentence):", full_sentence_detections)
+        Sanitizer.redact_sentences(full_sentence_detections)
+
     if embedded_detections:
         print("    Embedded injections (redacting clause only):", embedded_detections)
         Sanitizer.redact_injection_clause(embedded_detections)  # now operates on Sanitizer.data internally
-
-    if full_sentence_detections:
-        print("    Standalone injections (redacting full sentence):", full_sentence_detections)
-        StandaloneDetector = initialize_detector(Sanitizer.data, patterns)
-        StandaloneDetector.place_tags(full_sentence_detections, start_tag="<flag>", end_tag="</flag>",
-                                      extend_to_sentence_end=True)
-        Sanitizer = initialize_sanitizer(StandaloneDetector.prompt)
-        Sanitizer.redact()
 
     print("\n[3] SANITIZATION:")
     print("    Before sanitization:", Detector.prompt)
