@@ -34,7 +34,7 @@ Reply with only 0 or 1.""",
 
     if raw_output not in ("0", "1"):
         # log warning or raise, don't silently treat as benign
-        print(f"Unexpected validator output: {repr(raw_output)}")
+        print(f"WARNING: validator returned unexpected output {repr(raw_output)}; counting as FAIL")
         return False  # or raise an exception
 
     return raw_output == "1"
@@ -43,8 +43,8 @@ Reply with only 0 or 1.""",
 def test_output_validation(prompt, data):
     valid_output = llm_validate(prompt, data)
     if valid_output:
-        print("Output validation passed")
+        print("Output validation: PASS (response is relevant to the prompt)")
         return True
     else:
-        print("Output validation failed")
+        print("Output validation: FAIL (response looks unrelated or hijacked)")
         return False

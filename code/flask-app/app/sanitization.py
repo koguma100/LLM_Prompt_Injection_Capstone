@@ -1,36 +1,23 @@
-from app.prototype import Data_Sanitization_Engine
+import sys
+import os
+
+# Add both the code directory and prototype directory to sys.path
+code_dir = os.path.join(os.path.dirname(__file__), '../../')
+prototype_dir = os.path.join(code_dir, 'prototype')
+sys.path.insert(0, code_dir)
+sys.path.insert(0, prototype_dir)
+
+from Data_Sanitization_Engine import process_single as proto_process_single
 
 
-# Processing for one prompt. Take in Prompt object tuple and list of regex patterns.
+# Wrapper to adapt prototype's process_single to Flask app's needs
 def process_single(prompt, data, patterns):
-    prediction = 0
-    print("ORIGINAL DATA:\t", data)
-    Detector = Data_Sanitization_Engine.Detect(data, patterns)
+    # Create a Sample object that matches prototype's expectations
+    class Sample:
+        def __init__(self, text):
+            self.text = text
+            self.prediction = 0
 
-    # use the detection functions
-
-    detected_instruction_overrides = Detector.regex_scanner(patterns.INSTRUCTION_OVERRIDE_PATTERN)
-    if len(detected_instruction_overrides) > 0:
-        prediction = 1
-        print("PREDICTION UPDATED -- INSTRUCTION")
-        print("instruction overrides:", detected_instruction_overrides)
-    Detector.place_tags(detected_instruction_overrides, start_tag="<flag>", end_tag="</flag>",
-                        extend_to_sentence_end=True)
-
-    detected_authority_overrides = Detector.regex_scanner(patterns.AUTHORITY_PATTERN)
-    if len(detected_authority_overrides) > 0:
-        prediction = 1
-        print("PREDICTION UPDATED -- AUTHORITY")
-        print("authority overrides:", detected_authority_overrides)
-    Detector.place_tags(detected_authority_overrides, start_tag="<flag>", end_tag="</flag>",extend_to_sentence_end=True)
-
-    Sanitizer = Data_Sanitization_Engine.Sanitize(Detector.prompt)
-    Sanitizer.sanitize()
-    print("SANITIZED DATA:\t", Sanitizer.data,)
-
-    output = Data_Sanitization_Engine.local_llm_call(f"{prompt}\n\Data:\n{Sanitizer.data}")
-    print("LLM OUTPUT:\t\t", output)
-
-    Data_Sanitization_Engine.test_output_validation(prompt, output)
-    print("\n")
-    return prediction, Sanitizer.data
+    sample = Sample(data)
+    result = proto_process_single(prompt, sample, patterns)
+    return result

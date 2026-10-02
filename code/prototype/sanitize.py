@@ -1,63 +1,81 @@
 import re
-import nltk
-import spacy
+from nltk.tokenize import sent_tokenize
 
-nlp = spacy.load("en_core_web_sm")
-from nltk.tokenize import word_tokenize, sent_tokenize
-from nltk.stem import WordNetLemmatizer
+# Conjunctions/prepositions that can dangle at either end of a cut
+_TRAILING_JOINERS = re.compile(
+    r'\s+(and|or|with|for|to|but|yet|so|while|as|by)\s*$',
+    re.IGNORECASE
+)
+_LEADING_JOINERS = re.compile(
+    r'^(and|or|with|for|to|but|yet|so|while|as|by)\s+',
+    re.IGNORECASE
+)
 
-lemmatizer = WordNetLemmatizer()
 
-KNOWN_INJECTION_VERBS = {
-    "ignore", "disregard", "forget", "override", "overwrite", "override",
-    "replace", "stop", "classify", "output", "print", "reveal",
-    "list", "show", "tell", "pretend", "assume", "act", "change",
-    "reset", "delete", "skip", "bypass", "suppress", "return"
-}
+def strip_dangling_conjunctions(text: str) -> str:
+    text = _TRAILING_JOINERS.sub('', text).rstrip()
+    text = _LEADING_JOINERS.sub('', text).lstrip()
+    return text
 
-def is_imperative_verb(token, pos_tag):
-    if pos_tag == 'VB': # word is a verb. Dangerous for more creative writing such as academic papers.
-    # Idea: toggle "strict" for things like datasets and turn off for resumes that should not have commands/instructions at all.
-        return True
-    lemma = lemmatizer.lemmatize(token.lower(), pos='v')
-    # if not a verb, then check the list of known Injection verbs/
-    return lemma in KNOWN_INJECTION_VERBS
+
+def _find_earliest_injection(sentence: str, matched_spans: list[str]) -> tuple[int, str] | None:
+    earliest_idx = len(sentence)
+    earliest_span = None
+
+    for span in matched_spans:
+        idx = sentence.lower().find(span.lower())
+        if idx != -1 and idx < earliest_idx:
+            earliest_idx = idx
+            earliest_span = span
+
+    return (earliest_idx, earliest_span) if earliest_span is not None else None
+
 
 class Sanitize(object):
-    def __init__(self, data):
+    def __init__(self, data: str):
         self.data = data
 
-    def redact(self):
+    def redact(self) -> str:
         self.data = re.sub(r'<flag>.*?</flag>', '[REDACTED]', self.data, flags=re.DOTALL)
         return self.data
 
-    def redact_injection_clause(self, matched_spans):
-        # split into component sentences:
+    def redact_injection_clause(self, matched_spans: list[str]) -> str:
         sentences = sent_tokenize(self.data)
         result_sentences = []
 
         for sentence in sentences:
-            # check for a matching flag in this sentence. If not found, append to the output sentence.
-            matched_pattern = next((match for match in matched_spans if match.lower() in sentence.lower()), None)
-            if not matched_pattern:
-                result_sentences.append(sentence)
-                continue
+            current = sentence
+            # Keep removing spans until none remain in this sentence
+            while True:
+                hit = _find_earliest_injection(current, matched_spans)
+                if hit is None:
+                    break
 
-            # find where the PI starts in the sentence
-            span_start = sentence.lower().find(matched_pattern.lower())
-            if span_start == -1:
-                result_sentences.append(sentence)
-                continue
+                span_start, matched_span = hit
+                span_end = span_start + len(matched_span)
 
-            # Redact from injection to end -- danger of missing some information -- introduce max redaction length?
-            legitimate_prefix = sentence[:span_start].rstrip()
-            # strip trailing conjunctions like "and", "with", "for" from the prefix
-            legitimate_prefix = re.sub(r'\s+(and|or|with|for|to)\s*$', '', legitimate_prefix, flags=re.IGNORECASE)
+                prefix = current[:span_start].rstrip()
+                suffix = current[span_end:].lstrip()
 
+                if not prefix:
+                    suffix = _LEADING_JOINERS.sub('', suffix).lstrip()
 
-            if legitimate_prefix:
-                # add a period
-                result_sentences.append(legitimate_prefix + '.')
+                if prefix and suffix:
+                    current = prefix + ' ' + suffix
+                elif prefix:
+                    current = prefix + '.'
+                elif suffix:
+                    current = suffix
+                else:
+                    current = ''
+                    break
+
+            # Clean up double commas and comma-space-comma artifacts
+            current = re.sub(r',\s*,', ',', current)
+            current = re.sub(r',\s*(and|or)\s*,', r', \1', current, flags=re.IGNORECASE)
+
+            if current.strip():
+                result_sentences.append(current)
 
         self.data = ' '.join(result_sentences)
         return self.data
