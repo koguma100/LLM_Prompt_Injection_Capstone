@@ -6,4 +6,5 @@ false_negatives.txt
 false_positives.txt
 performance_stats.txt
 __pycache__/
-.pytest_cache__pycache__/
+.pytest_cache
+.idea/
