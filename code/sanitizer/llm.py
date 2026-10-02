@@ -85,13 +85,3 @@ Reply with only 0 or 1.""", num_predict=100, timeout=30)
         return False  # or raise an exception
 
     return raw_output == "1"
-
-
-def test_output_validation(prompt, data):
-    valid_output = llm_validate(prompt, data)
-    if valid_output:
-        print("Output validation: PASS (response is relevant to the prompt)")
-        return True
-    else:
-        print("Output validation: FAIL (response looks unrelated or hijacked)")
-        return False

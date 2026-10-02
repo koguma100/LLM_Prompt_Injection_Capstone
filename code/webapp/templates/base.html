@@ -213,13 +213,13 @@
             <div class="response-box">{{ response2.message.content }}</div>
         {% endif %}
 
-        {% if response3 %}
+        {% if result %}
             <label>Detection & Sanitization Results</label>
             <div class="report-box">
                 <div class="report-status">
                     <span class="report-status-label">Prompt Injection Detected:</span>
-                    <span class="report-status-value {{ 'detected' if response3[0] else 'clean' }}">
-                        {{ "Yes" if response3[0] else "No" }}
+                    <span class="report-status-value {{ 'detected' if result.prediction else 'clean' }}">
+                        {{ "Yes" if result.prediction else "No" }}
                     </span>
                 </div>
                 <div class="report-data">
@@ -227,11 +227,11 @@
                     <div class="comparison-container">
                         <div class="comparison-box">
                             <div class="comparison-label unsanitized">❌ Unsanitized (Original)</div>
-                            <div class="comparison-content">{{ response3[1] }}</div>
+                            <div class="comparison-content">{{ result.original }}</div>
                         </div>
                         <div class="comparison-box">
                             <div class="comparison-label sanitized">✓ Sanitized</div>
-                            <div class="comparison-content">{{ response3[2] }}</div>
+                            <div class="comparison-content">{{ result.sanitized }}</div>
                         </div>
                     </div>
                 </div>
@@ -240,11 +240,11 @@
                     <div class="comparison-container">
                         <div class="comparison-box">
                             <div class="comparison-label unsanitized">❌ LLM Response (Unsanitized Data)</div>
-                            <div class="comparison-content">{{ response3[3] }}</div>
+                            <div class="comparison-content">{{ result.unsanitized_output }}</div>
                         </div>
                         <div class="comparison-box">
                             <div class="comparison-label sanitized">✓ LLM Response (Sanitized Data)</div>
-                            <div class="comparison-content">{{ response3[4] }}</div>
+                            <div class="comparison-content">{{ result.sanitized_output }}</div>
                         </div>
                     </div>
                 </div>

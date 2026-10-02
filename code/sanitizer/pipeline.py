@@ -1,56 +1,60 @@
+from dataclasses import dataclass
+
 from nltk.tokenize import sent_tokenize
 
 from .detection import Detect
+from .llm import llm_validate, local_llm_call
+from .patterns import Patterns
 from .sanitize import Sanitize
-from .llm import local_llm_call, test_output_validation
 
 
-class Sample(object):
-    def __init__(self, text, actual_value=None):
-        self.text = text
-        self.actual = actual_value
-        self.prediction = 0
-        self.unsanitized_valid = True
-        self.sanitized_valid = True
+# Everything process_single found and produced for one piece of data
+@dataclass
+class Result:
+    prompt: str
+    original: str
+    sanitized: str
 
-def initialize_detector(prompts, patterns):
-    return Detect(prompts, patterns)
+    # Detections, by technique
+    outlier_clauses: list
+    instruction_overrides: list
+    authority_overrides: list
+    bow_malicious: list
 
-def initialize_sanitizer(prompt):
-    return Sanitize(prompt)
+    # How each detection was redacted
+    standalone: list  # through the end of its sentence
+    embedded: list    # as a clause inside its sentence
 
-# Processing for one prompt. Take in Prompt object tuple and list of regex patterns.
-def process_single(prompt, data, patterns):
-    print("[1] ORIGINAL INPUT DATA:\n   ", data.text)
-    print("\n[2] DETECTION RESULTS:")
+    # LLM answers to the prompt with each version of the data (False if the LLM call failed),
+    # and whether output validation judged each answer relevant to the prompt
+    unsanitized_output: str | bool
+    sanitized_output: str | bool
+    unsanitized_valid: bool
+    sanitized_valid: bool
 
-    Detector = initialize_detector(data.text, patterns)
-    outlier_clauses = Detector.find_outlier_clauses(data.text, 0.50)
-    if len(outlier_clauses) > 0:
-        data.prediction = 1
-        print("    Outlier clauses (semantic outliers):", outlier_clauses)
+    @property
+    def detections(self):
+        return self.instruction_overrides + self.authority_overrides + self.outlier_clauses + self.bow_malicious
 
-    detected_instruction_overrides = Detector.regex_scanner(patterns.INSTRUCTION_OVERRIDE_PATTERN)
-    if len(detected_instruction_overrides) > 0:
-        data.prediction = 1
-        print("    Instruction override matches (regex):", detected_instruction_overrides)
+    # 1 = prompt injection, 0 = benign
+    @property
+    def prediction(self):
+        return 1 if self.detections or not self.sanitized_valid else 0
 
-    detected_authority_overrides = Detector.regex_scanner(patterns.AUTHORITY_PATTERN)
-    if len(detected_authority_overrides) > 0:
-        data.prediction = 1
-        print("    Authority override matches (regex):", detected_authority_overrides)
 
-    detected_BoW_overrides = Detector.BoW_malicious_scanner()
-    if len(detected_BoW_overrides) > 0:
-        data.prediction = 1
-        print("    Malicious sentences (BoW model):", detected_BoW_overrides)
+# Detect and redact prompt injections in the data, then compare the LLM's answers to the prompt with the
+# original and the sanitized data.
+def process_single(prompt, data, patterns=Patterns):
+    Detector = Detect(data, patterns)
+    outlier_clauses = Detector.find_outlier_clauses(data, 0.50)
+    instruction_overrides = Detector.regex_scanner(patterns.INSTRUCTION_OVERRIDE_PATTERN)
+    authority_overrides = Detector.regex_scanner(patterns.AUTHORITY_PATTERN)
+    bow_malicious = Detector.BoW_malicious_scanner()
 
-    all_detections = detected_instruction_overrides + detected_authority_overrides + outlier_clauses + detected_BoW_overrides
-    if not all_detections:
-        print("    No prompt injections detected")
+    all_detections = instruction_overrides + authority_overrides + outlier_clauses + bow_malicious
 
     # Sanitization
-    sentences = sent_tokenize(data.text)
+    sentences = sent_tokenize(data)
     embedded_detections = [
         detection for detection in all_detections
         if any(
@@ -62,38 +66,30 @@ def process_single(prompt, data, patterns):
 
     full_sentence_detections = [d for d in all_detections if d not in embedded_detections]
 
-    Sanitizer = initialize_sanitizer(data.text)
+    Sanitizer = Sanitize(data)
 
     # Redact whole sentences first, so a clause redaction can't change a flagged sentence before it's removed
     if full_sentence_detections:
-        print("    Standalone injections (redacting full sentence):", full_sentence_detections)
         Sanitizer.redact_sentences(full_sentence_detections)
 
     if embedded_detections:
-        print("    Embedded injections (redacting clause only):", embedded_detections)
         Sanitizer.redact_injection_clause(embedded_detections)  # now operates on Sanitizer.data internally
 
-    print("\n[3] SANITIZATION:")
-    print("    Before sanitization:", Detector.prompt)
-    print("    After sanitization: ", Sanitizer.data)
-
-    # Get LLM response with unsanitized data
-    unsanitized_output = local_llm_call(f"{prompt}\n\nResume:\n{data.text}")
-    print("\n[4] LLM RESPONSES:")
-    print("    Response to UNSANITIZED data:", unsanitized_output)
-
-    # Get LLM response with sanitized data
+    unsanitized_output = local_llm_call(f"{prompt}\n\nResume:\n{data}")
     sanitized_output = local_llm_call(f"{prompt}\n\nResume:\n{Sanitizer.data}")
-    print("    Response to SANITIZED data:  ", sanitized_output)
 
-    print("\n[5] OUTPUT VALIDATION:")
-    print("    Response to UNSANITIZED data -> ", end="")
-    data.unsanitized_valid = test_output_validation(prompt, unsanitized_output)
-    print("    Response to SANITIZED data   -> ", end="")
-    valid_response = test_output_validation(prompt, sanitized_output)
-    data.sanitized_valid = valid_response
-    if valid_response is False:
-        data.prediction = 1
-    print("\n[6] FINAL PREDICTION:", "1 (prompt injection)" if data.prediction == 1 else "0 (benign)")
-    print("\n")
-    return data.prediction, data.text, Sanitizer.data, unsanitized_output, sanitized_output
+    return Result(
+        prompt=prompt,
+        original=data,
+        sanitized=Sanitizer.data,
+        outlier_clauses=outlier_clauses,
+        instruction_overrides=instruction_overrides,
+        authority_overrides=authority_overrides,
+        bow_malicious=bow_malicious,
+        standalone=full_sentence_detections,
+        embedded=embedded_detections,
+        unsanitized_output=unsanitized_output,
+        sanitized_output=sanitized_output,
+        unsanitized_valid=llm_validate(prompt, unsanitized_output),
+        sanitized_valid=llm_validate(prompt, sanitized_output),
+    )

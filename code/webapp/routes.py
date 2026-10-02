@@ -1,7 +1,6 @@
 from flask import Blueprint, render_template, request
 #from ollama import chat
-from sanitizer.patterns import Patterns
-from sanitizer.pipeline import Sample, process_single
+from sanitizer.pipeline import process_single
 
 
 main = Blueprint("main", __name__)
@@ -24,7 +23,7 @@ model = "llama3:8b"
 def home():
     response = None
     response2 = None
-    response3 = None
+    result = None
 
     if request.method == "POST":
         # prompt from user
@@ -45,8 +44,8 @@ def home():
         # )
 
         if prompt and data:
-            response3 = process_single(prompt, Sample(data), Patterns)
+            result = process_single(prompt, data)
 
         print(response)
 
-    return render_template("base.html", response=response, response2=response2, response3=response3, model=model)
+    return render_template("base.html", response=response, response2=response2, result=result, model=model)
