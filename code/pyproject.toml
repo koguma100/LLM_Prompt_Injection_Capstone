@@ -14,6 +14,7 @@ include = ["sanitizer*", "webapp*", "evaluation*"]
 
 [tool.setuptools.package-data]
 webapp = ["templates/*.html"]
+evaluation = ["data/*.csv"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

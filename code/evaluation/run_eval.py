@@ -1,17 +1,16 @@
 # Batch evaluation of the sanitization pipeline. From the code/ directory run:
 #     python -m evaluation.run_eval
-# To evaluate a different dataset, add it to evaluation/samples.py as an element of the Prompts class
-# and pass it to ProgramData in main(). Outputs (stats, plots, false positives/negatives) go to code/results/.
+# To evaluate a different sample set, pass its name (a CSV in evaluation/data/, see evaluation/samples.py) to
+# load_samples in main(). Outputs (stats, plots, false positives/negatives) go to code/results/.
 # Pulling from Hugging face: create a .sql file like the existing hugging-face/query.sql, then do duckdb < query.sql
-# to create a csv of the query results. Then use evaluation.utils.csv_to_list to turn the csv into a python list
-# (I've been copying data from this output into samples.py, so another task could be automating this into a function).
+# to create a csv of the query results. A csv with text,label columns can be saved straight into evaluation/data/.
 
 import os
 
 from sanitizer.metrics import PerformanceStats
 from sanitizer.patterns import Patterns
 from sanitizer.pipeline import Sample, process_single
-from evaluation.samples import Prompts
+from evaluation.samples import load_samples
 
 RESULTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "results")
 
@@ -68,7 +67,7 @@ def process_predict_batch(prompt, data, patterns):
 
 def main():
     os.makedirs(RESULTS_DIR, exist_ok=True)
-    Engine = ProgramData("Should I hire this person as an entry level cybersecurity analyst?", Prompts.RESUMES_HALF_PI, Patterns)
+    Engine = ProgramData("Should I hire this person as an entry level cybersecurity analyst?", load_samples("resumes_half_pi"), Patterns)
     process_predict_batch(Engine.prompt, Engine.data, Engine.patterns)
 
 if __name__ == "__main__":

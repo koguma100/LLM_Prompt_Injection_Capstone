@@ -1,0 +1,2 @@
+# Evaluation samples contain \r\n inside quoted texts; keep the bytes exactly as written
+code/evaluation/data/*.csv -text
