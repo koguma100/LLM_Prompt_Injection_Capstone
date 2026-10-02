@@ -5,7 +5,6 @@ matplotlib
 scipy
 numpy
 datasets
-nltk
-pandas
-sentence-transformers
-torch
+pypdf
+python-docx
+confusables
