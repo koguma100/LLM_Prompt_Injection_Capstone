@@ -1,0 +1,9 @@
+# The only public entry point. Caddy gets an HTTPS certificate for SITE_ADDRESS from Let's Encrypt, asks every
+# visitor for the site password, and forwards to the web app. Settings come from deploy/.env.
+{$SITE_ADDRESS} {
+	basic_auth {
+		{$SITE_USER} {$SITE_PASSWORD_HASH}
+	}
+
+	reverse_proxy web:8000
+}

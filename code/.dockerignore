@@ -1,0 +1,13 @@
+# Keep the web app image small: only sanitizer/, webapp/, evaluation/ (packaged) and models/ are needed
+**/__pycache__
+**/*.egg-info
+.pytest_cache
+venv
+.venv
+.env
+results/
+legacy/
+tests/
+training/
+dataset-generation/
+evaluation/hugging-face/

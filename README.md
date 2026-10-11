@@ -86,7 +86,18 @@ The web app runs with debug mode off. Set `FLASK_DEBUG=1` to turn on the debugge
     ├── results/             # evaluation outputs (not committed)
     └── legacy/              # unused older code, kept for reference
 
-Future development will provide a Dockerfile to bypass manually entering the above steps.
+### Deployment
+
+The web app and the LLM run in Docker: `code/Dockerfile` builds the web app, and `llm/Dockerfile` builds an Ollama server with `phi3:mini`. The web app reads two optional environment variables:
+
+    OLLAMA_URL      Ollama's /api/generate URL (default http://localhost:11434/api/generate)
+    LLM_TIMEOUT     seconds to wait for each LLM call; a CPU-only server needs several minutes
+
+To run both containers locally, train the BoW models first (the web app image includes `code/models/`), then from the repository root:
+
+    docker compose up --build       # web app at http://localhost:8000
+
+To deploy on a free Oracle Cloud VM, with HTTPS and a site password, follow [deploy/README.md](deploy/README.md).
 
 ## Functionality
 
