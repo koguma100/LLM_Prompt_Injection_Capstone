@@ -1,0 +1,44 @@
+# Server setup (Oracle Cloud VM, see README.md): Caddy (HTTPS and the site password) in front of the web app,
+# with the Ollama server reachable only by the web app. Copy .env.example to .env and fill it in, then:
+#   docker compose up -d --build
+#
+# Only Caddy publishes ports. Ports published by Docker skip the VM's own firewall, so the web app and Ollama
+# must stay unpublished to be unreachable from the internet.
+services:
+  caddy:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM caddy:2.10.2
+        COPY Caddyfile /etc/caddy/Caddyfile
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:?set SITE_ADDRESS in deploy/.env}
+      SITE_USER: ${SITE_USER:?set SITE_USER in deploy/.env}
+      SITE_PASSWORD_HASH: ${SITE_PASSWORD_HASH:?set SITE_PASSWORD_HASH in deploy/.env}
+    volumes:
+      # HTTPS certificates; kept so restarts don't request new ones (Let's Encrypt limits how often you can)
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+
+  web:
+    build: ../code
+    restart: unless-stopped
+    environment:
+      OLLAMA_URL: http://llm:7860/api/generate
+      LLM_TIMEOUT: "300"
+    depends_on:
+      - llm
+
+  llm:
+    build: ../llm
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:

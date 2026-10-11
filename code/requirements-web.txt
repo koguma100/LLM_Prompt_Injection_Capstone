@@ -1,0 +1,16 @@
+# Packages for the deployed web app (installed by the Dockerfile): the sanitizer and Flask app only, without
+# the evaluation, training and test packages in requirements.txt. The Dockerfile installs CPU-only PyTorch first.
+
+# Sanitization engine (sanitizer/)
+requests
+numpy
+scipy
+nltk
+sentence-transformers
+# Same version that pickled the BoW models in models/; unpickling with a different version can fail
+scikit-learn==1.9.1
+confusables
+
+# Web app (webapp/) and its production server
+Flask
+gunicorn

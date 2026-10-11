@@ -2,7 +2,7 @@ import time
 
 import requests
 
-from .config import LLM_MODEL, OLLAMA_URL
+from .config import LLM_MODEL, LLM_TIMEOUT, OLLAMA_URL
 
 # Seconds to wait before each retry of a failed request; covers Ollama restarting (systemd restarts it in ~3 s)
 RETRY_DELAYS = (1, 3, 6)
@@ -22,7 +22,7 @@ def is_available():
         return False
 
 
-# Send a prompt to the local Ollama server and return the response text.
+# Send a prompt to the Ollama server and return the response text.
 # Retries a failed request a few times, then raises LLMUnavailable.
 def _generate(prompt, num_predict, timeout):
     payload = {
@@ -38,7 +38,7 @@ def _generate(prompt, num_predict, timeout):
 
     for delay in (*RETRY_DELAYS, None):
         try:
-            response = requests.post(OLLAMA_URL, json=payload, timeout=timeout)
+            response = requests.post(OLLAMA_URL, json=payload, timeout=LLM_TIMEOUT or timeout)
             response.raise_for_status()
             return response.json().get("response", "")
         except requests.exceptions.RequestException as e:

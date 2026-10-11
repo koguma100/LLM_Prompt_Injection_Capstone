@@ -1,0 +1,21 @@
+# Runs the web app (code/) and the Ollama server (llm/) locally, for testing the containers before deploying.
+# For the server setup with HTTPS and a password, see deploy/. Ollama in Docker on a Mac runs on the CPU only.
+#   docker compose up --build        # then open http://localhost:8000
+#
+# To use the Ollama already running on your machine instead of the llm container:
+#   OLLAMA_URL=http://host.docker.internal:11434/api/generate docker compose up --build --no-deps web
+services:
+  web:
+    build: code
+    ports:
+      - "8000:8000"
+    environment:
+      OLLAMA_URL: ${OLLAMA_URL:-http://llm:7860/api/generate}
+      LLM_TIMEOUT: "300"
+    depends_on:
+      - llm
+
+  llm:
+    build: llm
+    ports:
+      - "7860:7860"
