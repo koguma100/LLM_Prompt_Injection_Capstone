@@ -77,6 +77,10 @@ The first build takes a while (it downloads PyTorch and the 2 GB model). Open `h
 
 To change the password, put a new hash in `.env` and run `docker compose up -d`.
 
+Saved experiments are in a SQLite database on the `experiments` Docker volume, so they survive rebuilds and `docker compose down`, but not `docker compose down -v`. Everyone who logs in sees the same saved experiments. To back them up:
+
+    docker compose cp web:/data/experiments.db ./experiments-backup.db
+
 - **Security updates:** Ubuntu installs them automatically. Rebuild now and then (`docker compose build --pull && docker compose up -d`) to update the base images.
 - **Never set `FLASK_DEBUG=1` on the server.** Flask's debugger lets anyone who reaches the page run code on the machine.
 - **Idle reclamation:** Oracle can reclaim a free VM whose CPU, network and memory use all stay under 20% for 7 days. The LLM container loads the model when it starts and keeps it in memory, which keeps memory use above that.

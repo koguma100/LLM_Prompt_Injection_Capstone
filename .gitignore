@@ -22,3 +22,9 @@ BoW_stats*.txt
 # Datasets: third-party data is not redistributed (see README.md, Citations)
 code/training/*.csv
 code/evaluation/hugging-face/*.csv
+
+# Saved web app experiments (code/webapp/experiments.py; local runs keep them in code/instance/)
+code/instance/
+
+# Python package build output (pip wheel / pip install . writes code/build/)
+code/build/

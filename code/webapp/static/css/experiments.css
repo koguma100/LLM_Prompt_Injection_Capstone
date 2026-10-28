@@ -1,0 +1,24 @@
+/* Saved experiments list (experiments.html) */
+
+.exp-row {
+    display: flex; align-items: center; gap: 16px;
+    padding: 18px 24px;
+}
+.exp-row + .exp-row { border-top: 1px solid var(--border); }
+.exp-row .er-main { flex: 1; min-width: 0; }
+.exp-row .er-name { font-weight: 600; font-size: 15px; color: var(--ink); }
+.exp-row .er-name:hover { color: var(--teal-ink); }
+.exp-row .er-prompt {
+    font-size: 13px; color: var(--muted); margin-top: 3px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.exp-row .er-meta {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .04em;
+    color: var(--faint); margin-top: 6px;
+}
+.exp-row form { flex: none; }
+.exp-row .btn { padding: 7px 11px; font-size: 13px; }
+
+@media (max-width: 680px) {
+    .exp-row { flex-wrap: wrap; padding: 16px; }
+}
