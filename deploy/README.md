@@ -69,9 +69,21 @@ The first build takes a while (it downloads PyTorch and the 2 GB model). Open `h
     sudo iptables -I INPUT 6 -p tcp -m multiport --dports 80,443 -j ACCEPT
     sudo netfilter-persistent save
 
+## 6. Check the deployment
+
+Run the smoke test, from `deploy/` on the VM or on your own computer (it only needs Python 3, no packages):
+
+    python3 smoke_test.py https://<SITE_ADDRESS> --user <SITE_USER>
+
+It asks for the site password (or reads `SMOKE_PASSWORD`), then checks that each page loads, that the forms show their
+errors, that a draft saves and deletes, and that one experiment runs end to end through Ollama with every mitigation
+on. The run takes a few minutes on the VM; `--quick` skips it. It prints PASS or FAIL for each check and exits with 1
+if any failed. It saves a draft named "Smoke test <time>" and deletes it again, so saved experiments are left as they were.
+
 ## Updating and maintenance
 
     git pull && docker compose up -d --build   # deploy new code
+    python3 smoke_test.py https://<SITE_ADDRESS> --user <SITE_USER>   # check it works
     docker compose logs -f web                 # watch the web app's logs
     docker compose restart                     # restart everything
 

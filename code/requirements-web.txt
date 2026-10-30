@@ -14,3 +14,7 @@ confusables
 # Web app (webapp/) and its production server
 Flask
 gunicorn
+# Reading uploaded source data files (webapp/uploads.py)
+pypdf
+python-docx
+openpyxl

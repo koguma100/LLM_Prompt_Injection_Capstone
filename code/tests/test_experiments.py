@@ -19,7 +19,7 @@ def fake_result(prompt="Summarize.", data="Some data."):
 
 @pytest.fixture
 def app():
-    with mock.patch.object(routes, "process_single", side_effect=lambda p, d: fake_result(p, d)):
+    with mock.patch.object(routes, "run_experiment", side_effect=lambda p, d, s: fake_result(p, d)):
         yield create_app()
 
 
@@ -168,7 +168,7 @@ def test_old_unsaved_runs_are_pruned(app, client):
 
 
 def test_failed_run_is_not_recorded(client):
-    with mock.patch.object(routes, "process_single", side_effect=LLMUnavailable("down")):
+    with mock.patch.object(routes, "run_experiment", side_effect=LLMUnavailable("down")):
         html = client.post("/", data=FORM).data.decode()
     assert "Could not reach the LLM" in html
     assert hidden(html, "run_id") == ""

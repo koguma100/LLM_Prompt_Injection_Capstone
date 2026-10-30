@@ -170,13 +170,21 @@
                     </label>
                     <label class="mit">
                         <div class="mit-top">
+                            <span class="mit-title">Bag-of-words classifier</span>
+                            <span class="switch"><input type="checkbox" name="mit_bow" {{ 'checked' if settings.mit_bow }}><span class="track"></span><span class="thumb"></span></span>
+                        </div>
+                        <span class="mit-desc">Flag sentences a trained model labels as injections.</span>
+                        <span class="mit-tag">Input</span>
+                    </label>
+                    <label class="mit">
+                        <div class="mit-top">
                             <span class="mit-title">Output validation</span>
                             <span class="switch"><input type="checkbox" name="mit_validation" {{ 'checked' if settings.mit_validation }}><span class="track"></span><span class="thumb"></span></span>
                         </div>
                         <span class="mit-desc">Check the response against the task.</span>
                         <span class="mit-tag">Output</span>
                     </label>
-                    <label class="mit wide">
+                    <label class="mit">
                         <div class="mit-top">
                             <span class="mit-title">Sanitization</span>
                             <span class="switch"><input type="checkbox" name="mit_sanitization" {{ 'checked' if settings.mit_sanitization }}><span class="track"></span><span class="thumb"></span></span>
@@ -239,6 +247,9 @@
                         <div>{{ error }}</div>
                     </div>
                 {% elif result %}
+                    <!-- Which layers ran: settings are the toggles this result was produced with -->
+                    {% set detecting = settings.mit_regex or settings.mit_bow %}
+                    {% set off_ico %}<span class="trace-ico off"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="12" x2="18" y2="12"/></svg></span>{% endset %}
                     <!-- Live: trust boundary -->
                     <div class="res-section-label">01 / Trust boundary</div>
                     <div class="boundary">
@@ -264,11 +275,21 @@
                         <span>02 / Potential injection</span>
                         {% if result.detections %}
                             <span class="badge amber">{{ result.detections|length }} signal{{ 's' if result.detections|length != 1 }}</span>
-                        {% else %}
+                        {% elif detecting %}
                             <span class="badge mint">Clean</span>
+                        {% else %}
+                            <span class="badge off">Not scanned</span>
                         {% endif %}
                     </div>
-                    {% if result.detections %}
+                    {% if not detecting %}
+                        <div class="signal-panel clean">
+                            <div class="signal-head">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                                Detection was off
+                            </div>
+                            <div class="signal-note">Regex detection and the bag-of-words classifier were both switched off, so the source data was not scanned.</div>
+                        </div>
+                    {% elif result.detections %}
                         <div class="signal-panel">
                             <div class="signal-head">
                                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -291,33 +312,57 @@
 
                     <!-- Live: mitigation trace -->
                     <div class="res-section-label">03 / Mitigation trace</div>
-                    <div class="trace-item">
-                        <span class="trace-ico ok"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="trace-item{{ ' off' if not settings.mit_deobfuscation }}">
+                        {% if settings.mit_deobfuscation %}
+                            <span class="trace-ico ok"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                        {% else %}{{ off_ico }}{% endif %}
                         <div class="trace-body">
-                            <div class="t-row"><span class="t-title">Source isolated</span><span class="t-tag">Delimited</span></div>
-                            <div class="t-desc">Data wrapped in explicit source tags.</div>
+                            <div class="t-row"><span class="t-title">Hidden text revealed</span><span class="t-tag">{{ 'Normalized' if settings.mit_deobfuscation else 'Off' }}</span></div>
+                            <div class="t-desc">{{ 'Detectors scanned a deobfuscated copy of the data.' if settings.mit_deobfuscation else 'Deobfuscation was off: detectors scanned the raw data.' }}</div>
                         </div>
                     </div>
-                    <div class="trace-item">
-                        {% if result.detections %}
+                    <div class="trace-item{{ ' off' if not detecting }}">
+                        {% if not detecting %}{{ off_ico }}
+                        {% elif result.detections %}
                             <span class="trace-ico flag"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></span>
                         {% else %}
                             <span class="trace-ico ok"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                         {% endif %}
                         <div class="trace-body">
-                            <div class="t-row"><span class="t-title">Suspicious instruction flagged</span><span class="t-tag">Review</span></div>
-                            <div class="t-desc">{{ result.detections|length }} match{{ 'es' if result.detections|length != 1 }} redacted from the source before the model saw it.</div>
+                            <div class="t-row"><span class="t-title">Suspicious instruction flagged</span><span class="t-tag">{{ 'Review' if detecting else 'Off' }}</span></div>
+                            <div class="t-desc">
+                                {% if not detecting %}Detection was off: nothing was flagged.
+                                {% elif not result.detections %}No matches in the source data.
+                                {% elif settings.mit_sanitization %}{{ result.detections|length }} match{{ 'es' if result.detections|length != 1 }} redacted from the source before the model saw it.
+                                {% else %}{{ result.detections|length }} match{{ 'es' if result.detections|length != 1 }} flagged but left in the source: sanitization was off.
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
-                    <div class="trace-item">
-                        {% if result.sanitized_valid %}
+                    <div class="trace-item{{ ' off' if not settings.mit_hardening }}">
+                        {% if settings.mit_hardening %}
+                            <span class="trace-ico ok"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                        {% else %}{{ off_ico }}{% endif %}
+                        <div class="trace-body">
+                            <div class="t-row"><span class="t-title">Source isolated</span><span class="t-tag">{{ 'Delimited' if settings.mit_hardening else 'Off' }}</span></div>
+                            <div class="t-desc">{{ 'Data wrapped in explicit source tags.' if settings.mit_hardening else 'Prompt hardening was off: prompt and data were sent as one string.' }}</div>
+                        </div>
+                    </div>
+                    <div class="trace-item{{ ' off' if not settings.mit_validation }}">
+                        {% if not settings.mit_validation %}{{ off_ico }}
+                        {% elif result.sanitized_valid %}
                             <span class="trace-ico ok"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                         {% else %}
                             <span class="trace-ico flag"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/><circle cx="12" cy="12" r="10"/></svg></span>
                         {% endif %}
                         <div class="trace-body">
-                            <div class="t-row"><span class="t-title">Response checked against task</span><span class="t-tag">{{ 'Aligned' if result.sanitized_valid else 'Drift' }}</span></div>
-                            <div class="t-desc">{{ 'Sanitized response stays on the requested task.' if result.sanitized_valid else 'Validator judged the response off-task.' }}</div>
+                            {% if settings.mit_validation %}
+                                <div class="t-row"><span class="t-title">Response checked against task</span><span class="t-tag">{{ 'Aligned' if result.sanitized_valid else 'Drift' }}</span></div>
+                                <div class="t-desc">{{ 'Sanitized response stays on the requested task.' if result.sanitized_valid else 'Validator judged the response off-task.' }}</div>
+                            {% else %}
+                                <div class="t-row"><span class="t-title">Response checked against task</span><span class="t-tag">Off</span></div>
+                                <div class="t-desc">Output validation was off: the response was not checked.</div>
+                            {% endif %}
                         </div>
                     </div>
 
@@ -430,7 +475,11 @@
                     <div class="res-section-label"><span>Sanitized input</span><span class="rl-right">With mitigations</span></div>
                     <div class="resp-panel">{{ result.sanitized_output }}</div>
                     <div class="res-section-label"><span>Original input</span><span class="rl-right amber">Baseline</span></div>
-                    <div class="resp-panel drift">{{ result.unsanitized_output }}</div>
+                    {% if result.unsanitized_output %}
+                        <div class="resp-panel drift">{{ result.unsanitized_output }}</div>
+                    {% else %}
+                        <div class="res-empty">The baseline comparison was off for this run.</div>
+                    {% endif %}
                 {% else %}
                     <div class="res-empty">Run an experiment to compare the model's response on the sanitized input against the unmitigated baseline.</div>
                 {% endif %}
@@ -438,13 +487,20 @@
 
             <!-- ---------- Prompt trace tab ---------- -->
             <div class="tab-panel" data-panel="trace">
-                {% if result %}
+                {% if result and not settings.mit_hardening %}
+                    <div class="res-section-label">Unhardened prompt</div>
+                    <div class="res-mono-block">{{ result.prompt }}
+
+Resume:
+{{ result.sanitized }}  <span class="muted">({{ 'sanitized' if settings.mit_sanitization else 'not sanitized' }})</span></div>
+                    <div class="res-footnote">Prompt hardening was off, so your prompt and the data were sent as one string, with nothing marking the data as untrusted.</div>
+                {% elif result %}
                     <div class="res-section-label">Hardened prompt structure</div>
                     <div class="res-mono-block"><span class="tag">[QUESTION]</span>
 {{ result.prompt }}
 <span class="tag">[/QUESTION]</span>
 
-<span class="tag">[CONTEXT]</span>  <span class="muted">(untrusted · sanitized)</span>
+<span class="tag">[CONTEXT]</span>  <span class="muted">(untrusted · {{ 'sanitized' if settings.mit_sanitization else 'not sanitized' }})</span>
 {{ result.sanitized }}
 <span class="tag">[/CONTEXT]</span></div>
                     <div class="res-footnote">The context is wrapped in explicit tags and marked untrusted so instructions inside it are treated as data, not commands.</div>

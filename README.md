@@ -54,6 +54,7 @@ From the `code/` directory:
     python -m evaluation.run_eval   # batch evaluation; stats and plots go to code/results/
     python -m webapp                # web app at http://127.0.0.1:5000
     pytest                          # unit tests
+    python ../deploy/smoke_test.py http://127.0.0.1:5000   # smoke test a running web app (see deploy/README.md)
 
 `run_eval` evaluates the `resumes_half_pi` sample set with a hiring question by default. `--samples` takes a sample set name (the CSVs in `code/evaluation/data/`; `--help` lists them) or the path to any CSV with `text` and `label` columns (1 = prompt injection, 0 = benign), and `--prompt` changes the question. For example, to evaluate the BoW training dataset:
 

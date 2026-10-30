@@ -226,6 +226,8 @@
 }
 .trace-ico.ok { background: #e2f0e9; color: var(--teal); }
 .trace-ico.flag { background: #fbf1da; color: var(--warn); }
+.trace-ico.off { background: var(--border); color: var(--faint); }
+.trace-item.off .t-title { color: var(--muted); }
 .trace-body { flex: 1; min-width: 0; }
 .trace-body .t-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .trace-body .t-title { font-weight: 600; font-size: 14px; color: var(--ink); }
@@ -268,9 +270,9 @@
 
 /* ===== Small variants (were inline styles) ===== */
 .notice.page-notice { margin-bottom: 24px; }
-.mit.wide { grid-column: 1 / -1; }
 .step-num.icon { border: none; padding: 4px 0; color: var(--ink); }
 .res-section-label .rl-right.amber { color: var(--amber-ink-2); }
+.badge.off { background: var(--border); color: var(--muted); }
 .res-mono-block .muted { color: var(--muted); }
 
 /* ===== Responsive ===== */
