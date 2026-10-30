@@ -1,5 +1,6 @@
 from functools import lru_cache
 import os
+import joblib
 import pickle
 import re
 
@@ -14,10 +15,12 @@ MALICIOUS_MODEL = "BoWModelMalicious"
 # Loaded once per model and then reused
 @lru_cache(maxsize=None)
 def load_model(name):
-    with open(os.path.join(MODELS_DIR, f"{name}.pkl"), 'rb') as pickledModel:
-        model = pickle.load(pickledModel)
+
+    model = joblib.load(os.path.join(MODELS_DIR, f"{name}.joblib"))
+
     with open(os.path.join(MODELS_DIR, f"{name}_vectorizer.pkl"), 'rb') as pickledVectorizer:
         vectorizer = pickle.load(pickledVectorizer)
+
     return model, vectorizer
 
 
