@@ -23,7 +23,7 @@ RUN python -m nltk.downloader -d "$NLTK_DATA" punkt punkt_tab \
 
 COPY . .
 RUN pip install --no-deps .
-RUN test -f models/BoWModel.pkl -a -f models/BoWModelMalicious.pkl \
+RUN test -f models/BoWModel.joblib -a -f models/BoWModelMalicious.joblib \
     || (echo "Missing BoW models in code/models/; train them with training/train_bow.py" && exit 1)
 
 # PORT can be changed by the host. One worker keeps a single copy of the embedding model in memory; threads serve concurrent

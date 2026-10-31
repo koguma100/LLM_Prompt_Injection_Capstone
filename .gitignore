@@ -18,6 +18,7 @@ BoW_stats*.txt
 
 # Trained models (code/models/): regenerate with the scripts in code/training/
 *.pkl
+*.joblib
 
 # Datasets: third-party data is not redistributed (see README.md, Citations)
 code/training/*.csv
