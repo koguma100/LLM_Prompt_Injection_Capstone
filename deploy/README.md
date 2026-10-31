@@ -44,7 +44,7 @@ A private repository needs a [deploy key](https://docs.github.com/en/authenticat
 
 The trained BoW models aren't committed, so copy them from your computer (run this locally, from the repository root):
 
-    scp code/models/*.pkl ubuntu@<public IP>:~/LLM_Prompt_Injection_Capstone/code/models/
+    scp code/models/* ubuntu@<public IP>:~/LLM_Prompt_Injection_Capstone/code/models/
 
 ## 5. Configure and start
 
