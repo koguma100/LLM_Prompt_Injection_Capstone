@@ -1,10 +1,11 @@
 # The playground's mitigation pipeline. It runs the sanitizer engine's techniques one at a time, so each toggle on
 # the form (routes.DEFAULT_SETTINGS) can switch its technique off, and returns the engine's Result so pages and saved
 # experiments read it the same way. With deobfuscation and hardening off and everything else on, it does what
-# sanitizer.pipeline.process_single does.
+# sanitizer.pipeline.process_single does, except that its learned detector is the Random Forest classifier
+# (sanitizer/detection/rf.py) instead of the BoW classifier.
 from nltk.tokenize import sent_tokenize
 
-from sanitizer.detection import bow
+from sanitizer.detection import rf
 from sanitizer.llm import llm_validate, local_llm_call
 from sanitizer.normalize import NormalizedText, normalize_with_map
 from sanitizer.patterns import Patterns
@@ -46,10 +47,10 @@ def regex_detections(scanned, pattern):
     return [_original_text(scanned, m.start(), m.end()) for m in pattern.finditer(scanned.text)]
 
 
-# bow_scan returns the flagged sentences in order, so each is found after the one before it
-def bow_detections(scanned):
+# rf_scan returns the flagged sentences in order, so each is found after the one before it
+def rf_detections(scanned):
     found, pos = [], 0
-    for sentence in bow.bow_scan(scanned.text, bow.MALICIOUS_MODEL):
+    for sentence in rf.rf_scan(scanned.text, rf.MALICIOUS_MODEL):
         start = scanned.text.find(sentence, pos)
         pos = start + len(sentence)
         found.append(_original_text(scanned, start, pos))
@@ -86,16 +87,16 @@ def sanitize(data, detections):
 def run_experiment(prompt, data, settings):
     scanned = scan_copy(data, settings["mit_deobfuscation"])
 
-    instruction_overrides, authority_overrides, bow_malicious = [], [], []
+    instruction_overrides, authority_overrides, rf_malicious = [], [], []
     if settings["mit_regex"]:
         instruction_overrides = regex_detections(scanned, Patterns.INSTRUCTION_OVERRIDE_PATTERN)
         authority_overrides = regex_detections(scanned, Patterns.AUTHORITY_PATTERN)
-    if settings["mit_bow"]:
-        bow_malicious = bow_detections(scanned)
+    if settings["mit_rf"]:
+        rf_malicious = rf_detections(scanned)
 
     sanitized, standalone, embedded = data, [], []
     if settings["mit_sanitization"]:
-        sanitized, standalone, embedded = sanitize(data, instruction_overrides + authority_overrides + bow_malicious)
+        sanitized, standalone, embedded = sanitize(data, instruction_overrides + authority_overrides + rf_malicious)
 
     build_prompt = harden_prompt if settings["mit_hardening"] else plain_prompt
     sanitized_output = local_llm_call(build_prompt(prompt, sanitized))
@@ -110,11 +111,12 @@ def run_experiment(prompt, data, settings):
         outlier_clauses=[],
         instruction_overrides=instruction_overrides,
         authority_overrides=authority_overrides,
-        bow_malicious=bow_malicious,
+        bow_malicious=[],
         standalone=standalone,
         embedded=embedded,
         unsanitized_output=unsanitized_output,
         sanitized_output=sanitized_output,
         unsanitized_valid=llm_validate(prompt, unsanitized_output) if validate and baseline else True,
         sanitized_valid=llm_validate(prompt, sanitized_output) if validate else True,
+        rf_malicious=rf_malicious,
     )

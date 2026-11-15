@@ -7,7 +7,7 @@ numpy
 scipy
 nltk
 sentence-transformers
-# Same version that pickled the BoW models in models/; unpickling with a different version can fail
+# Same version that pickled the models in models/; unpickling with a different version can fail
 scikit-learn==1.9.1
 confusables
 

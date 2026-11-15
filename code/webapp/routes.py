@@ -15,7 +15,7 @@ DEFAULT_SETTINGS = {
     "mit_hardening": True,
     "mit_deobfuscation": True,
     "mit_regex": True,
-    "mit_bow": True,
+    "mit_rf": True,
     "mit_validation": True,
     "mit_sanitization": False,
     "compare_baseline": True,
@@ -27,9 +27,16 @@ NAME_LENGTH = 120
 # The model the pipeline uses (set in sanitizer/config.py), shown in the page footer
 model = LLM_MODEL
 
-# Unchecked checkboxes aren't submitted, so a posted form's settings are just which toggles are present
+# The detectors whose findings sanitization redacts
+DETECTORS = ("mit_regex", "mit_rf")
+
+
+# Unchecked checkboxes aren't submitted, so a posted form's settings are just which toggles are present.
+# Sanitization can only be on with at least one detector on (the form locks it too).
 def form_settings(form):
-    return {name: name in form for name in DEFAULT_SETTINGS}
+    settings = {name: name in form for name in DEFAULT_SETTINGS}
+    settings["mit_sanitization"] = settings["mit_sanitization"] and any(settings[d] for d in DETECTORS)
+    return settings
 
 
 # The source data: the text of any uploaded files, which replace the text box, otherwise the text box. Raises

@@ -170,8 +170,8 @@
                     </label>
                     <label class="mit">
                         <div class="mit-top">
-                            <span class="mit-title">Bag-of-words classifier</span>
-                            <span class="switch"><input type="checkbox" name="mit_bow" {{ 'checked' if settings.mit_bow }}><span class="track"></span><span class="thumb"></span></span>
+                            <span class="mit-title">Random Forest classifier</span>
+                            <span class="switch"><input type="checkbox" name="mit_rf" {{ 'checked' if settings.mit_rf }}><span class="track"></span><span class="thumb"></span></span>
                         </div>
                         <span class="mit-desc">Flag sentences a trained model labels as injections.</span>
                         <span class="mit-tag">Input</span>
@@ -184,12 +184,16 @@
                         <span class="mit-desc">Check the response against the task.</span>
                         <span class="mit-tag">Output</span>
                     </label>
-                    <label class="mit">
+                    <!-- Sanitization redacts what the detectors found, so it needs regex detection or the classifier on
+                         (routes.form_settings enforces this; playground.js locks the switch as the detectors change) -->
+                    {% set can_sanitize = settings.mit_regex or settings.mit_rf %}
+                    <label class="mit{{ ' locked' if not can_sanitize }}">
                         <div class="mit-top">
                             <span class="mit-title">Sanitization</span>
-                            <span class="switch"><input type="checkbox" name="mit_sanitization" {{ 'checked' if settings.mit_sanitization }}><span class="track"></span><span class="thumb"></span></span>
+                            <span class="switch"><input type="checkbox" name="mit_sanitization" {{ 'checked' if settings.mit_sanitization and can_sanitize }} {{ 'disabled' if not can_sanitize }}><span class="track"></span><span class="thumb"></span></span>
                         </div>
                         <span class="mit-desc">remove potentially malicious/disruptive data</span>
+                        <span class="mit-note">Turn on regex detection or the Random Forest classifier first.</span>
                         <span class="mit-tag">Input</span>
                     </label>
                 </div>
@@ -248,7 +252,7 @@
                     </div>
                 {% elif result %}
                     <!-- Which layers ran: settings are the toggles this result was produced with -->
-                    {% set detecting = settings.mit_regex or settings.mit_bow %}
+                    {% set detecting = settings.mit_regex or settings.mit_rf %}
                     {% set off_ico %}<span class="trace-ico off"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="12" x2="18" y2="12"/></svg></span>{% endset %}
                     <!-- Live: trust boundary -->
                     <div class="res-section-label">01 / Trust boundary</div>
@@ -287,7 +291,7 @@
                                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
                                 Detection was off
                             </div>
-                            <div class="signal-note">Regex detection and the bag-of-words classifier were both switched off, so the source data was not scanned.</div>
+                            <div class="signal-note">Regex detection and the Random Forest classifier were both switched off, so the source data was not scanned.</div>
                         </div>
                     {% elif result.detections %}
                         <div class="signal-panel">

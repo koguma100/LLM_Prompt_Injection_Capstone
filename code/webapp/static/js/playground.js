@@ -68,6 +68,22 @@ function updateEnabled() {
 mitSwitches.forEach(s => s.addEventListener('change', updateEnabled));
 updateEnabled();
 
+// ----- Sanitization redacts what the detectors found, so it can only be on with regex or the Random Forest on -----
+// Switching both detectors off locks it off; switching one back on restores what it was set to.
+const detectorSwitches = ['mit_regex', 'mit_rf'].map(n => document.querySelector('input[name="' + n + '"]'));
+const sanitizeSwitch = document.querySelector('input[name="mit_sanitization"]');
+let sanitizeWanted = sanitizeSwitch.checked;
+function updateSanitization() {
+    const canSanitize = detectorSwitches.some(s => s.checked);
+    sanitizeSwitch.disabled = !canSanitize;
+    sanitizeSwitch.checked = canSanitize && sanitizeWanted;
+    sanitizeSwitch.closest('.mit').classList.toggle('locked', !canSanitize);
+    updateEnabled();
+}
+sanitizeSwitch.addEventListener('change', () => { sanitizeWanted = sanitizeSwitch.checked; });
+detectorSwitches.forEach(s => s.addEventListener('change', updateSanitization));
+updateSanitization();
+
 // ----- Sample payload (matches the example in the mockup) -----
 const SAMPLE_PROMPT = "Summarize the quarterly report in three bullet points. Focus on revenue, operating costs, and the outlook for next quarter.";
 const SAMPLE_DATA = "Q3 OPERATING REPORT\nRevenue rose 12% to $4.2M. Operating costs fell 3%.\nNext quarter: expand the enterprise customer base.";

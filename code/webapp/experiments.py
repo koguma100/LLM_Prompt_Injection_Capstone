@@ -74,11 +74,20 @@ def _same_inputs(row, prompt, data, settings):
             and json.loads(row["settings"]) == settings)
 
 
+# Experiments saved before the web app switched from the BoW to the Random Forest classifier stored its toggle as
+# mit_bow; show it as the learned-classifier toggle it was. Its results are still the BoW ones (Result.bow_malicious).
+def _settings_from_json(text):
+    settings = json.loads(text)
+    if "mit_bow" in settings:
+        settings.setdefault("mit_rf", settings.pop("mit_bow"))
+    return settings
+
+
 def _as_experiment(row):
     if row is None:
         return None
     experiment = dict(row)
-    experiment["settings"] = json.loads(row["settings"])
+    experiment["settings"] = _settings_from_json(row["settings"])
     experiment["result"] = _result_from_json(row["result"])
     return experiment
 

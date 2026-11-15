@@ -207,6 +207,22 @@ def test_saved_result_survives_a_new_field_in_result(app, client):
     assert client.get(f"/experiments/{run_id}").status_code == 200
 
 
+# Experiments saved while the web app used the BoW classifier stored its toggle as mit_bow
+@pytest.mark.parametrize("on", [True, False])
+def test_old_bow_toggle_loads_as_the_rf_toggle(app, client, on):
+    _, run_id = run(client)
+    client.post("/experiments/save", data={**FORM, "experiment_name": "x", "run_id": run_id})
+    with app.app_context():
+        db = experiments.get_db()
+        db.execute("UPDATE experiments SET settings = json_set(json_remove(settings, '$.mit_rf'), '$.mit_bow', json(?))",
+                   ("true" if on else "false",))
+        db.commit()
+        settings = experiments.get_experiment(int(run_id))["settings"]
+    assert settings["mit_rf"] is on and "mit_bow" not in settings
+    html = client.get(f"/experiments/{run_id}").data.decode()
+    assert bool(re.search(r'name="mit_rf" checked', html)) == on
+
+
 @pytest.mark.parametrize("big", ["9223372036854775808", "99999999999999999999999999"])
 def test_ids_too_large_for_sqlite_are_not_found(client, big):
     assert client.get(f"/experiments/{big}").status_code == 404
@@ -255,7 +271,7 @@ def test_enter_in_a_field_runs_instead_of_saving(client):
 
 def test_technique_guide(client):
     html = client.get("/guide").data.decode()
-    for technique in ("Text deobfuscation", "Regex injection detection", "Bag-of-words classifier", "Sanitization",
+    for technique in ("Text deobfuscation", "Regex injection detection", "Random Forest classifier", "Sanitization",
                       "Prompt hardening template", "Output validation"):
         assert technique in html
     assert 'class="topbar-link on" href="/guide"' in html

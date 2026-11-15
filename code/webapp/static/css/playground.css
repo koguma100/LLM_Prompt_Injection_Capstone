@@ -123,6 +123,12 @@
 .switch input:checked + .track { background: var(--teal); }
 .switch input:checked + .track + .thumb { transform: translateX(17px); }
 
+/* a technique that can't be switched on yet (sanitization with both detectors off) */
+.mit.locked { opacity: .55; cursor: not-allowed; }
+.mit.locked .switch input { cursor: not-allowed; }
+.mit .mit-note { display: none; font-size: 12px; color: var(--muted); font-style: italic; }
+.mit.locked .mit-note { display: block; }
+
 .mit-foot {
     display: flex; align-items: center; justify-content: space-between;
     gap: 16px; padding: 20px 24px; border-top: 1px solid var(--border);

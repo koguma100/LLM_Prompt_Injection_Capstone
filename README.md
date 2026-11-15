@@ -94,7 +94,7 @@ The web app runs with debug mode off. Set `FLASK_DEBUG=1` to turn on the debugge
 
 ## Self-hosting
 
-Run the web app on your own machine or server. Either way, you need the trained BoW models in `code/models/`: train them with the [installation steps](#installation-steps) or copy them from another machine.
+Run the web app on your own machine or server. Either way, you need the trained Random Forest model in `code/models/` (the web app's learned detector; train it with `python training/train_rf.py` from `code/`) or a copy from another machine.
 
 ### With Docker (recommended)
 

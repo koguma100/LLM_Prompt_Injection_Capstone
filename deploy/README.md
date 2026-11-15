@@ -42,7 +42,7 @@ Log back in, then clone the repository:
 
 A private repository needs a [deploy key](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/managing-deploy-keys) or access token on the VM.
 
-The trained BoW models aren't committed, so copy them from your computer (run this locally, from the repository root):
+The trained models (the web app uses the Random Forest model, `RFModelMalicious.joblib`) aren't committed, so copy them from your computer (run this locally, from the repository root):
 
     scp code/models/* ubuntu@<public IP>:~/LLM_Prompt_Injection_Capstone/code/models/
 
