@@ -20,7 +20,6 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 RESULTS_DIR = os.path.join(os.path.dirname(SCRIPT_DIR), "results")
 NGRAMMIN = 1
 NGRAMMAX = 3
-ESTIMATORS = 100
 
 # imperative: subtype_id (0 = not imperative, 1 = benign imperative, 2 = malicious), with every value > 0 treated as 1
 # malicious: label (0 = benign, 1 = prompt injection)
@@ -45,7 +44,13 @@ def train(dataFrame, mode, dataset):
     )
     
     RandomForestHolder = RandomForestClassifier(
-        n_estimators= ESTIMATORS
+        #Parameters found by running random_hyperparam_testing.py
+        n_estimators= 1400, 
+        min_samples_split= 5, 
+        min_samples_leaf= 2, 
+        max_features= 'sqrt', 
+        max_depth= None, 
+        bootstrap= False
     )
 
     RandomForestModel = Pipeline([('tfidf', NGramWordVectorizer), ('classifier', RandomForestHolder)])
