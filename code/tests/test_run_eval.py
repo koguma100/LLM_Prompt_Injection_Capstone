@@ -10,7 +10,7 @@ from sanitizer.pipeline import Result
 DATA = [(f"sample text {i}", i % 2) for i in range(1, 7)]
 
 
-def fake_result(prompt, text, patterns=None):
+def fake_result(prompt, text, patterns=None, **kwargs):
     return Result(prompt=prompt, original=text, sanitized=text, outlier_clauses=[], instruction_overrides=[],
                   authority_overrides=[], bow_malicious=["x"] if text.endswith(("1", "3", "5")) else [],
                   standalone=[], embedded=[], unsanitized_output="a", sanitized_output="b",
@@ -36,7 +36,7 @@ def test_full_run_writes_all_outputs(tmp_path):
 
 def test_waits_for_ollama_and_retries_the_sample(tmp_path, capsys):
     calls = iter([fake_result, fake_result, LLMUnavailable("down"), LLMUnavailable("down")] + [fake_result] * 10)
-    def flaky(*args):
+    def flaky(*args, **kwargs):
         step = next(calls)
         if isinstance(step, Exception):
             raise step
@@ -49,7 +49,7 @@ def test_waits_for_ollama_and_retries_the_sample(tmp_path, capsys):
 
 def test_stops_with_stats_when_ollama_stays_down(tmp_path, capsys):
     calls = iter([fake_result, fake_result])
-    def down_after_two(*args):
+    def down_after_two(*args, **kwargs):
         step = next(calls, None)
         if step is None:
             raise LLMUnavailable("down")
@@ -63,7 +63,7 @@ def test_stops_with_stats_when_ollama_stays_down(tmp_path, capsys):
 
 def test_ctrl_c_keeps_finished_samples_and_writes_stats(tmp_path, capsys):
     calls = iter([fake_result, fake_result, fake_result])
-    def interrupted(*args):
+    def interrupted(*args, **kwargs):
         step = next(calls, None)
         if step is None:
             raise KeyboardInterrupt
@@ -75,7 +75,7 @@ def test_ctrl_c_keeps_finished_samples_and_writes_stats(tmp_path, capsys):
 
 def test_resume_continues_after_finished_samples(tmp_path):
     calls = iter([fake_result, fake_result])
-    def interrupted(*args):
+    def interrupted(*args, **kwargs):
         step = next(calls, None)
         if step is None:
             raise KeyboardInterrupt
@@ -96,3 +96,25 @@ def test_without_resume_starts_over(tmp_path):
     run(tmp_path, fake_result)
     preds, ps = run(tmp_path, fake_result)
     assert ps.call_count == 6 and len(rows(tmp_path)) == 6
+
+
+def skipped_result(prompt, text, patterns=None, **kwargs):
+    return Result(prompt=prompt, original=text, sanitized=text, outlier_clauses=[], instruction_overrides=["i"],
+                  authority_overrides=[], bow_malicious=["x"], standalone=[], embedded=[], unsanitized_output=None,
+                  sanitized_output=None, unsanitized_valid=None, sanitized_valid=None, cheap_score=2.0, llm_skipped=True)
+
+def test_skipped_samples_are_saved_and_resumed(tmp_path):
+    calls = iter([skipped_result, fake_result, KeyboardInterrupt()])
+    def interrupted(*args, **kwargs):
+        step = next(calls)
+        if isinstance(step, BaseException):
+            raise step
+        return step(*args)
+    run(tmp_path, interrupted)
+    assert rows(tmp_path)[0]["sanitized_valid"] == "skipped"
+    preds, _ = run(tmp_path, fake_result, resume=True)
+    assert preds == [1, 0, 1, 0, 1, 0]
+
+def test_no_early_exit_passes_no_threshold(tmp_path):
+    _, ps = run(tmp_path, fake_result, skip_threshold=None)
+    assert all(c.kwargs["skip_threshold"] is None for c in ps.call_args_list)

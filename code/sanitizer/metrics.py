@@ -20,11 +20,12 @@ class PerformanceStats:
 
     # Output validation fail rate of the LLM response before vs. after sanitization, split by label.
     # Malicious: the after rate should drop (injections neutralized). Benign: both rates should stay near 0 (no over-redaction).
+    # Samples whose LLM stage was skipped (validation None) aren't counted.
     def sanitization_fail_rates(self, unsanitized_valid, sanitized_valid, filename="sanitization_fail_rates.png"):
         columns = ["Label", "Samples", "Failed validation\nbefore sanitization", "Failed validation\nafter sanitization", "Change"]
         rows = []
         for name, label in (("Malicious", 1), ("Benign", 0)):
-            idx = [i for i, actual in enumerate(self.actuals) if actual == label]
+            idx = [i for i, actual in enumerate(self.actuals) if actual == label and sanitized_valid[i] is not None]
             n = len(idx)
             before = sum(1 for i in idx if not unsanitized_valid[i])
             after = sum(1 for i in idx if not sanitized_valid[i])
@@ -53,6 +54,9 @@ class PerformanceStats:
         print(f"{'Label':<10}{'Samples':>8}{'Before sanitization':>22}{'After sanitization':>21}{'Change':>11}")
         for row in rows:
             print(f"{row[0]:<10}{row[1]:>8}{row[2]:>22}{row[3]:>21}{row[4]:>11}")
+        skipped = sum(1 for v in sanitized_valid if v is None)
+        if skipped:
+            print(f"({skipped} samples skipped the LLM stage and aren't counted; rerun with --no-early-exit to include them)")
         print(f"Sanitization effectiveness table saved to {filename}")
         return rows
 

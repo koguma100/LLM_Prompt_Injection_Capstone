@@ -3,7 +3,9 @@
 #     python -m evaluation.run_eval --samples hugging_face_prompts --prompt "Summarize this text."
 #     python -m evaluation.run_eval --samples training/injection_detector_datasetv2.csv --holdout --limit 500 --quiet
 # --samples takes a sample set name (the CSVs in evaluation/data/) or the path to any CSV with text and label
-# columns. Each sample takes about 10 seconds (four LLM calls), so use --limit on large files.
+# columns. Each sample takes about 10 seconds (four LLM calls), so use --limit on large files. Samples the cheap
+# detectors are confident about skip the LLM calls (see SKIP_LLM_THRESHOLD in sanitizer/config.py); pass
+# --no-early-exit to always run them, e.g. to measure sanitization effectiveness on every sample.
 # Outputs (stats, plots, false positives/negatives, per-sample predictions) go to code/results/<sample set>/.
 # Pulling from Hugging face: create a .sql file like the existing hugging-face/query.sql, then do duckdb < query.sql
 # to create a csv of the query results. A csv with text,label columns can be saved straight into evaluation/data/.
@@ -16,6 +18,7 @@ import time
 
 from sklearn.model_selection import train_test_split
 
+from sanitizer.config import SKIP_LLM_THRESHOLD
 from sanitizer.llm import LLMUnavailable, is_available
 from sanitizer.metrics import PerformanceStats
 from sanitizer.patterns import Patterns
@@ -45,6 +48,8 @@ def random_subset(samples, n, seed):
 
 
 def validation_line(valid):
+    if valid is None:
+        return "Output validation: SKIPPED"
     if valid:
         return "Output validation: PASS (response is relevant to the prompt)"
     return "Output validation: FAIL (response looks unrelated or hijacked)"
@@ -73,13 +78,16 @@ def print_result(result):
     print("    Before sanitization:", result.original)
     print("    After sanitization: ", result.sanitized)
 
-    print("\n[4] LLM RESPONSES:")
-    print("    Response to UNSANITIZED data:", result.unsanitized_output)
-    print("    Response to SANITIZED data:  ", result.sanitized_output)
+    if result.llm_skipped:
+        print(f"\n[4] LLM RESPONSES AND [5] OUTPUT VALIDATION: skipped (cheap detector vote {result.cheap_score:g})")
+    else:
+        print("\n[4] LLM RESPONSES:")
+        print("    Response to UNSANITIZED data:", result.unsanitized_output)
+        print("    Response to SANITIZED data:  ", result.sanitized_output)
 
-    print("\n[5] OUTPUT VALIDATION:")
-    print("    Response to UNSANITIZED data -> " + validation_line(result.unsanitized_valid))
-    print("    Response to SANITIZED data   -> " + validation_line(result.sanitized_valid))
+        print("\n[5] OUTPUT VALIDATION:")
+        print("    Response to UNSANITIZED data -> " + validation_line(result.unsanitized_valid))
+        print("    Response to SANITIZED data   -> " + validation_line(result.sanitized_valid))
     print("\n[6] FINAL PREDICTION:", "1 (prompt injection)" if result.prediction == 1 else "0 (benign)")
     print("\n")
 
@@ -91,6 +99,10 @@ def print_result(result):
 class ResumeMismatch(Exception):
     pass
 
+
+# The validation columns hold True, False, or "skipped" when the LLM stage was skipped
+VALID_CSV = {True: "True", False: "False", None: "skipped"}
+VALID_FROM_CSV = {"True": True, "False": False}
 
 PREDICTIONS_HEADER = ["sample", "label", "prediction", "unsanitized_valid", "sanitized_valid", "detections", "text", "sanitized"]
 
@@ -110,11 +122,11 @@ def load_previous_predictions(path, data):
 
 
 # Run process_single, and if Ollama is down, wait up to max_wait minutes for it to come back and try again
-def process_with_wait(prompt, text, patterns, max_wait):
+def process_with_wait(prompt, text, patterns, max_wait, skip_threshold=SKIP_LLM_THRESHOLD):
     deadline = None
     while True:
         try:
-            return process_single(prompt, text, patterns)
+            return process_single(prompt, text, patterns, skip_threshold=skip_threshold)
         except LLMUnavailable as e:
             if deadline is None:
                 deadline = time.time() + max_wait * 60
@@ -129,7 +141,9 @@ def process_with_wait(prompt, text, patterns, max_wait):
 # quiet: print one progress line per sample instead of its full report
 # resume: keep the samples already in out_dir/predictions.csv and continue after them
 # max_wait: minutes to wait for Ollama to come back if it goes down mid-run
-def process_predict_batch(prompt, data, patterns=Patterns, out_dir=None, quiet=False, resume=False, max_wait=10):
+# skip_threshold: cheap detector vote that skips the LLM stage (None always runs it)
+def process_predict_batch(prompt, data, patterns=Patterns, out_dir=None, quiet=False, resume=False, max_wait=10,
+                          skip_threshold=SKIP_LLM_THRESHOLD):
     out_dir = out_dir or RESULTS_DIR
     os.makedirs(out_dir, exist_ok=True)
     predictions = []
@@ -146,8 +160,8 @@ def process_predict_batch(prompt, data, patterns=Patterns, out_dir=None, quiet=F
         actual_values.append(int(row["label"]))
         sample_lists.append(row["text"])
         predictions.append(int(row["prediction"]))
-        unsanitized_valid.append(row["unsanitized_valid"] == "True")
-        sanitized_valid.append(row["sanitized_valid"] == "True")
+        unsanitized_valid.append(VALID_FROM_CSV.get(row["unsanitized_valid"]))
+        sanitized_valid.append(VALID_FROM_CSV.get(row["sanitized_valid"]))
     if previous:
         print(f"Resuming: {len(previous)} of {len(data)} samples already done in {predictions_path}")
     predictions_file = open(predictions_path, "a" if previous else "w", newline="", encoding="utf-8")
@@ -166,7 +180,7 @@ def process_predict_batch(prompt, data, patterns=Patterns, out_dir=None, quiet=F
             print("=" * 80)
 
         try:
-            result = process_with_wait(prompt, text, patterns, max_wait)
+            result = process_with_wait(prompt, text, patterns, max_wait, skip_threshold)
         except LLMUnavailable:
             stopped = f"Ollama was unreachable for {max_wait} min"
             break
@@ -179,7 +193,7 @@ def process_predict_batch(prompt, data, patterns=Patterns, out_dir=None, quiet=F
             elapsed = time.time() - start
             remaining = elapsed / done_now * (len(data) - sample_number)
             print(f"[{sample_number}/{len(data)}] label {actual}  prediction {result.prediction}  "
-                  f"| {elapsed / 60:.1f} min elapsed, ~{remaining / 60:.0f} min left", flush=True)
+                  f"{'(LLM skipped) ' if result.llm_skipped else ''}| {elapsed / 60:.1f} min elapsed, ~{remaining / 60:.0f} min left", flush=True)
         else:
             print_result(result)
         sample_lists.append(text)
@@ -187,7 +201,8 @@ def process_predict_batch(prompt, data, patterns=Patterns, out_dir=None, quiet=F
         predictions.append(result.prediction)
         unsanitized_valid.append(result.unsanitized_valid)
         sanitized_valid.append(result.sanitized_valid)
-        writer.writerow([sample_number, actual, result.prediction, result.unsanitized_valid, result.sanitized_valid,
+        writer.writerow([sample_number, actual, result.prediction,
+                         VALID_CSV[result.unsanitized_valid], VALID_CSV[result.sanitized_valid],
                          len(result.detections), text, result.sanitized])
         predictions_file.flush()
     predictions_file.close()
@@ -235,6 +250,8 @@ def main():
     parser.add_argument("--quiet", action="store_true", help="print one progress line per sample instead of its full report")
     parser.add_argument("--resume", action="store_true",
                         help="continue a stopped run: keep the samples already in the output folder's predictions.csv")
+    parser.add_argument("--no-early-exit", action="store_true",
+                        help="always run the LLM answers and output validation, even when the cheap detectors agree")
     parser.add_argument("--wait", type=float, default=10,
                         help="minutes to wait for Ollama to come back if it goes down mid-run (default: 10)")
     args = parser.parse_args()
@@ -256,7 +273,8 @@ def main():
     print(f"Evaluating {len(data)} of {total} samples from {path} ({injections} injection, {len(data) - injections} benign)"
           f"{' [BoW holdout rows]' if args.holdout else ''}; results go to {out_dir}")
     try:
-        process_predict_batch(args.prompt, data, out_dir=out_dir, quiet=args.quiet, resume=args.resume, max_wait=args.wait)
+        process_predict_batch(args.prompt, data, out_dir=out_dir, quiet=args.quiet, resume=args.resume, max_wait=args.wait,
+                              skip_threshold=None if args.no_early_exit else SKIP_LLM_THRESHOLD)
     except ResumeMismatch as e:
         parser.error(str(e))
 

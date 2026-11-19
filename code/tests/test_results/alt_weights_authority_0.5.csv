@@ -1,0 +1,8 @@
+set,samples,skipped,skip_rate,skipped_malicious,skipped_benign,skip_precision
+embedded_pi_tests,15,7,0.467,7,0,1.000
+hugging_face_prompts,1000,77,0.077,77,0,1.000
+imperative_tests,25,7,0.280,0,7,0.000
+resumes_all_benign,50,0,0.000,0,0,
+resumes_half_pi,50,5,0.100,5,0,1.000
+simple_prompts,4,2,0.500,2,0,1.000
+datasetv2_bow_holdout,2400,67,0.028,67,0,1.000

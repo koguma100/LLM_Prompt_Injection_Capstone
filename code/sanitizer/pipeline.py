@@ -1,7 +1,9 @@
 from dataclasses import dataclass
+from typing import Optional
 
 from nltk.tokenize import sent_tokenize
 
+from .config import DETECTOR_WEIGHTS, SKIP_LLM_THRESHOLD
 from .detection import Detect
 from .llm import llm_validate, local_llm_call
 from .patterns import Patterns
@@ -27,10 +29,16 @@ class Result:
 
     # LLM answers to the prompt with each version of the data, and whether output validation judged each
     # answer relevant to the prompt. If Ollama can't be reached, process_single raises llm.LLMUnavailable.
-    unsanitized_output: str
-    sanitized_output: str
-    unsanitized_valid: bool
-    sanitized_valid: bool
+    # All four are None when the cheap detectors' vote skipped the LLM stage (see llm_skipped).
+    unsanitized_output: Optional[str]
+    sanitized_output: Optional[str]
+    unsanitized_valid: Optional[bool]
+    sanitized_valid: Optional[bool]
+
+    # Weighted vote of the cheap detectors (see config.DETECTOR_WEIGHTS), and whether it was high enough
+    # to skip the LLM stage
+    cheap_score: float = 0.0
+    llm_skipped: bool = False
 
     @property
     def detections(self):
@@ -40,12 +48,19 @@ class Result:
     # if detections found something OR if the output validator said the response doesn't make sense for the question.
     @property
     def prediction(self):
-        return 1 if self.detections or not self.sanitized_valid else 0
+        return 1 if self.detections or self.sanitized_valid is False else 0
+
+
+# Weighted vote of the cheap detectors: each one that found anything adds its weight once,
+# however many matches it had. detections maps detector name -> its matches.
+def cheap_vote(detections, weights=DETECTOR_WEIGHTS):
+    return sum(weights.get(name, 0) for name, matches in detections.items() if matches)
 
 
 # Detect and redact prompt injections in the data, then compare the LLM's answers to the prompt with the
-# original and the sanitized data.
-def process_single(prompt, data, patterns=Patterns):
+# original and the sanitized data. If the cheap detectors' vote reaches skip_threshold, the LLM stage is skipped
+# (skip_threshold=None always runs it).
+def process_single(prompt, data, patterns=Patterns, skip_threshold=SKIP_LLM_THRESHOLD):
     Detector = Detect(data, patterns)
     outlier_clauses = []
     # = Detector.find_outlier_clauses(data, 0.50)
@@ -54,6 +69,13 @@ def process_single(prompt, data, patterns=Patterns):
     bow_malicious = Detector.BoW_malicious_scanner()
 
     all_detections = instruction_overrides + authority_overrides + outlier_clauses + bow_malicious
+    score = cheap_vote({
+        "instruction_overrides": instruction_overrides,
+        "authority_overrides": authority_overrides,
+        "outlier_clauses": outlier_clauses,
+        "bow_malicious": bow_malicious,
+    })
+    llm_skipped = skip_threshold is not None and score >= skip_threshold
 
     # Sanitization
     sentences = sent_tokenize(data)
@@ -77,8 +99,14 @@ def process_single(prompt, data, patterns=Patterns):
     if embedded_detections:
         Sanitizer.redact_injection_clause(embedded_detections)  # now operates on Sanitizer.data internally
 
-    unsanitized_output = local_llm_call(f"{prompt}\n\nResume:\n{data}")
-    sanitized_output = local_llm_call(f"{prompt}\n\nResume:\n{Sanitizer.data}")
+    # The expensive stage: two LLM answers and two output validations
+    if llm_skipped:
+        unsanitized_output = sanitized_output = unsanitized_valid = sanitized_valid = None
+    else:
+        unsanitized_output = local_llm_call(f"{prompt}\n\nResume:\n{data}")
+        sanitized_output = local_llm_call(f"{prompt}\n\nResume:\n{Sanitizer.data}")
+        unsanitized_valid = llm_validate(prompt, unsanitized_output)
+        sanitized_valid = llm_validate(prompt, sanitized_output)
 
     return Result(
         prompt=prompt,
@@ -92,6 +120,8 @@ def process_single(prompt, data, patterns=Patterns):
         embedded=embedded_detections,
         unsanitized_output=unsanitized_output,
         sanitized_output=sanitized_output,
-        unsanitized_valid=llm_validate(prompt, unsanitized_output),
-        sanitized_valid=llm_validate(prompt, sanitized_output),
+        unsanitized_valid=unsanitized_valid,
+        sanitized_valid=sanitized_valid,
+        cheap_score=score,
+        llm_skipped=llm_skipped,
     )

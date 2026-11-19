@@ -241,6 +241,9 @@
                 </div>
                 <div class="report-data">
                     <div class="report-data-label">2. LLM Response Comparison</div>
+                    {% if result.llm_skipped %}
+                    <div class="comparison-content">Skipped: the cheap detectors agreed this is a prompt injection (vote {{ "%g"|format(result.cheap_score) }}), so the LLM answers and output validation weren't run.</div>
+                    {% else %}
                     <div class="comparison-container">
                         <div class="comparison-box">
                             <div class="comparison-label unsanitized">❌ LLM Response (Unsanitized Data)</div>
@@ -251,6 +254,7 @@
                             <div class="comparison-content">{{ result.sanitized_output }}</div>
                         </div>
                     </div>
+                    {% endif %}
                 </div>
             <textarea name="data" id="data" placeholder="Enter external data or context..."></textarea>
             <div class="file-input-wrapper">
