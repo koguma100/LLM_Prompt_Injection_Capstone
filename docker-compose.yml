@@ -12,6 +12,9 @@ services:
     environment:
       OLLAMA_URL: ${OLLAMA_URL:-http://llm:7860/api/generate}
       LLM_TIMEOUT: "300"
+      EXPERIMENTS_DB: /data/experiments.db
+    volumes:
+      - experiments:/data
     depends_on:
       - llm
 
@@ -19,3 +22,6 @@ services:
     build: llm
     ports:
       - "7860:7860"
+
+volumes:
+  experiments:

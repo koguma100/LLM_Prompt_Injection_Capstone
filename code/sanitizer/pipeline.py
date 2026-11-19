@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 from nltk.tokenize import sent_tokenize
@@ -40,9 +40,13 @@ class Result:
     cheap_score: float = 0.0
     llm_skipped: bool = False
 
+    # Sentences the Random Forest classifier flagged (the web app's learned detector; process_single uses BoW)
+    rf_malicious: list = field(default_factory=list)
+
     @property
     def detections(self):
-        return self.instruction_overrides + self.authority_overrides + self.outlier_clauses + self.bow_malicious
+        return (self.instruction_overrides + self.authority_overrides + self.outlier_clauses + self.bow_malicious
+                + self.rf_malicious)
 
     # 1 = prompt injection, 0 = benign
     # if detections found something OR if the output validator said the response doesn't make sense for the question.

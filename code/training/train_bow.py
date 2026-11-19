@@ -4,6 +4,7 @@
 # Models are saved to code/models/, test-set stats and confusion matrices to code/results/.
 import argparse
 import os
+import joblib
 import pickle
 
 from pandas import read_csv
@@ -57,8 +58,8 @@ def train(dataFrame, mode, dataset):
     BoWStats.stats(filename=os.path.join(RESULTS_DIR, f"BoW_stats_{mode}_{dataset}.txt"))
 
     #Save BoW model and its vectorizer
-    with open(os.path.join(MODELS_DIR, f"{modelName}.pkl"), 'wb') as f:
-        pickle.dump(BoWModel, f)
+    joblib.dump(BoWModel, os.path.join(MODELS_DIR, f"{modelName}.joblib"))
+
     with open(os.path.join(MODELS_DIR, f"{modelName}_vectorizer.pkl"), 'wb') as f:
         pickle.dump(sentenceVectorizer, f)
 
@@ -86,3 +87,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

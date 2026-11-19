@@ -11,3 +11,5 @@ tests/
 training/
 dataset-generation/
 evaluation/hugging-face/
+instance/
+build/

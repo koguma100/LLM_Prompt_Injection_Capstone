@@ -1,7 +1,7 @@
-# Web app image (see docker-compose.yml and deploy/). Build from the code/ directory, which must contain the trained BoW models
-# in models/ (see code/training/train_bow.py):
+# Web app image (see docker-compose.yml and deploy/). Build from the code/ directory, which must contain the trained Random
+# Forest model in models/ (see code/training/train_rf.py):
 #   docker build -t capstone-web .
-#   docker run -p 8000:8000 -e OLLAMA_URL=http://host.docker.internal:11434/api/generate capstone-web
+#   docker run -p 8000:8000 -v experiments:/data -e OLLAMA_URL=http://host.docker.internal:11434/api/generate capstone-web
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -23,11 +23,14 @@ RUN python -m nltk.downloader -d "$NLTK_DATA" punkt punkt_tab \
 
 COPY . .
 RUN pip install --no-deps .
-RUN test -f models/BoWModel.pkl -a -f models/BoWModelMalicious.pkl \
-    || (echo "Missing BoW models in code/models/; train them with training/train_bow.py" && exit 1)
+RUN test -f models/RFModelMalicious.joblib \
+    || (echo "Missing the Random Forest model in code/models/; train it with training/train_rf.py" && exit 1)
 
 # PORT can be changed by the host. One worker keeps a single copy of the embedding model in memory; threads serve concurrent
 # requests while they wait on the LLM, and the long timeout allows for a slow CPU-only LLM server.
-ENV PORT=8000
+# Saved experiments go on the /data volume, so rebuilding the container doesn't delete them
+ENV PORT=8000 \
+    EXPERIMENTS_DB=/data/experiments.db
+VOLUME /data
 EXPOSE 8000
 CMD gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 600 "webapp:create_app()"

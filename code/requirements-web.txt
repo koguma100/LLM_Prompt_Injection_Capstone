@@ -7,10 +7,14 @@ numpy
 scipy
 nltk
 sentence-transformers
-# Same version that pickled the BoW models in models/; unpickling with a different version can fail
+# Same version that pickled the models in models/; unpickling with a different version can fail
 scikit-learn==1.9.1
 confusables
 
 # Web app (webapp/) and its production server
 Flask
 gunicorn
+# Reading uploaded source data files (webapp/uploads.py)
+pypdf
+python-docx
+openpyxl

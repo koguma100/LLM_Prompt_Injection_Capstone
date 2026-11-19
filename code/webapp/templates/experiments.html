@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/experiments.css') }}">
+{% endblock %}
+
+{% block experiment_meta %}
+<div class="side-label">Saved experiments</div>
+<div class="exp-name"><span class="exp-dot"></span> {{ experiments|length }} saved</div>
+<div class="exp-sub">Open one to view or re-run it</div>
+{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">Lab <span class="sep">/</span> <span class="here">Experiments</span></div>
+<div class="page-head">
+    <div>
+        <h1>Saved experiments.</h1>
+        <div class="sub">Each keeps its prompt, source data, mitigation settings and the results from when it was saved.</div>
+    </div>
+    <div class="head-actions">
+        <a class="btn" href="{{ url_for('main.home') }}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New experiment
+        </a>
+    </div>
+</div>
+
+<section class="card">
+    {% for exp in experiments %}
+        <div class="exp-row">
+            <div class="er-main">
+                <a class="er-name" href="{{ url_for('main.view_experiment', experiment_id=exp.id) }}">{{ exp.name }}</a>
+                <div class="er-prompt">{{ exp.prompt or 'No prompt' }}</div>
+                <div class="er-meta">
+                    Saved {{ exp.saved_at[:16]|replace('T', ' ') }} UTC
+                    · {{ exp.mitigations_on }} mitigation{{ 's' if exp.mitigations_on != 1 }} on
+                </div>
+            </div>
+            {% if not exp.result %}
+                <span class="badge amber">Draft</span>
+            {% elif exp.result.detections %}
+                <span class="badge amber">{{ exp.result.detections|length }} signal{{ 's' if exp.result.detections|length != 1 }}</span>
+            {% else %}
+                <span class="badge mint">Clean</span>
+            {% endif %}
+            <form method="POST" action="{{ url_for('main.delete_experiment', experiment_id=exp.id) }}"
+                  onsubmit="return confirm('Delete this experiment? This cannot be undone.');">
+                <button type="submit" class="btn danger" aria-label="Delete {{ exp.name }}">Delete</button>
+            </form>
+        </div>
+    {% else %}
+        <div class="card-body">
+            <div class="res-empty">No saved experiments yet. Run one in the Playground, name it, and select Save.</div>
+        </div>
+    {% endfor %}
+</section>
+{% endblock %}
+

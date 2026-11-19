@@ -1,4 +1,5 @@
 from . import bow
+from . import rf
 from .encoding import scan_for_encoding
 from .regex import place_tags, regex_scan
 from .semantic import find_outlier_clauses
@@ -22,6 +23,14 @@ class Detect(object):
     # BoW model trained to flag any imperative sentence, benign or malicious
     def BoW_scanner(self):
         return bow.bow_scan(self.prompt, bow.IMPERATIVE_MODEL)
+
+    # Random Forest model trained to flag malicious instructions
+    def RF_malicious_scanner(self):
+        return rf.rf_scan(self.prompt, rf.MALICIOUS_MODEL)
+
+    # Random Forest model trained to flag any imperative sentence, benign or malicious
+    def RF_scanner(self):
+        return rf.rf_scan(self.prompt, rf.IMPERATIVE_MODEL)
 
     def place_tags(self, substrings, start_tag="<flag>", end_tag="</flag>", extend_to_sentence_end=False):
         self.prompt = place_tags(self.prompt, substrings, start_tag, end_tag, extend_to_sentence_end)
