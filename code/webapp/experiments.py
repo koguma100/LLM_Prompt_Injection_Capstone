@@ -5,6 +5,7 @@ import os
 import sqlite3
 from dataclasses import asdict, fields
 from datetime import datetime, timedelta, timezone
+from typing import get_args
 
 from flask import current_app, g
 
@@ -58,12 +59,16 @@ def _result_to_json(result):
 
 
 # Fields missing from an older saved result default to empty ([], "", False), so old experiments still load if
-# Result gains a field
+# Result gains a field. An Optional[X] field defaults like X.
+def _empty(field_type):
+    return (get_args(field_type) or (field_type,))[0]()
+
+
 def _result_from_json(text):
     if not text:
         return None
     saved = json.loads(text)
-    return Result(**{f.name: saved[f.name] if f.name in saved else f.type() for f in fields(Result)})
+    return Result(**{f.name: saved[f.name] if f.name in saved else _empty(f.type) for f in fields(Result)})
 
 
 # Browsers send textarea newlines as \r\n, so compare inputs without them

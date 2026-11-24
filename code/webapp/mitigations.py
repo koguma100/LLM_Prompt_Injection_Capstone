@@ -1,8 +1,7 @@
 # The playground's mitigation pipeline. It runs the sanitizer engine's techniques one at a time, so each toggle on
 # the form (routes.DEFAULT_SETTINGS) can switch its technique off, and returns the engine's Result so pages and saved
 # experiments read it the same way. With deobfuscation and hardening off and everything else on, it does what
-# sanitizer.pipeline.process_single does, except that its learned detector is the Random Forest classifier
-# (sanitizer/detection/rf.py) instead of the BoW classifier.
+# sanitizer.pipeline.process_single does.
 from nltk.tokenize import sent_tokenize
 
 from sanitizer.detection import rf

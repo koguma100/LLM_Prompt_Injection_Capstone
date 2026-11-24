@@ -3,7 +3,7 @@ from typing import Optional
 
 from nltk.tokenize import sent_tokenize
 
-from .config import DETECTOR_WEIGHTS, SKIP_LLM_THRESHOLD
+from .config import DETECTOR_WEIGHTS, INJECTION_THRESHOLD, SKIP_LLM_THRESHOLD
 from .detection import Detect
 from .llm import llm_validate, local_llm_call
 from .patterns import Patterns
@@ -21,7 +21,7 @@ class Result:
     outlier_clauses: list
     instruction_overrides: list
     authority_overrides: list
-    bow_malicious: list
+    bow_malicious: list  # retired BoW detector; always empty now, kept so saved results still load
 
     # How each detection was redacted
     standalone: list  # through the end of its sentence
@@ -40,7 +40,7 @@ class Result:
     cheap_score: float = 0.0
     llm_skipped: bool = False
 
-    # Sentences the Random Forest classifier flagged (the web app's learned detector; process_single uses BoW)
+    # Sentences the Random Forest classifier flagged
     rf_malicious: list = field(default_factory=list)
 
     @property
@@ -48,15 +48,27 @@ class Result:
         return (self.instruction_overrides + self.authority_overrides + self.outlier_clauses + self.bow_malicious
                 + self.rf_malicious)
 
+    # Weighted vote of every detector, including output validation of the answer from the sanitized data
+    # (see config.DETECTOR_WEIGHTS)
+    @property
+    def score(self):
+        return cheap_vote({
+            "rf_malicious": self.rf_malicious,
+            "instruction_overrides": self.instruction_overrides,
+            "authority_overrides": self.authority_overrides,
+            "outlier_clauses": self.outlier_clauses,
+            "bow_malicious": self.bow_malicious,
+            "llm_validation": self.sanitized_valid is False,
+        })
+
     # 1 = prompt injection, 0 = benign
-    # if detections found something OR if the output validator said the response doesn't make sense for the question.
     @property
     def prediction(self):
-        return 1 if self.detections or self.sanitized_valid is False else 0
+        return 1 if self.score >= INJECTION_THRESHOLD else 0
 
 
-# Weighted vote of the cheap detectors: each one that found anything adds its weight once,
-# however many matches it had. detections maps detector name -> its matches.
+# Weighted vote: each detector that found anything adds its weight once, however many matches it had.
+# detections maps detector name -> its matches (or a bool).
 def cheap_vote(detections, weights=DETECTOR_WEIGHTS):
     return sum(weights.get(name, 0) for name, matches in detections.items() if matches)
 
@@ -70,14 +82,14 @@ def process_single(prompt, data, patterns=Patterns, skip_threshold=SKIP_LLM_THRE
     # = Detector.find_outlier_clauses(data, 0.50)
     instruction_overrides = Detector.regex_scanner(patterns.INSTRUCTION_OVERRIDE_PATTERN)
     authority_overrides = Detector.regex_scanner(patterns.AUTHORITY_PATTERN)
-    bow_malicious = Detector.BoW_malicious_scanner()
+    rf_malicious = Detector.RF_malicious_scanner()
 
-    all_detections = instruction_overrides + authority_overrides + outlier_clauses + bow_malicious
+    all_detections = instruction_overrides + authority_overrides + outlier_clauses + rf_malicious
     score = cheap_vote({
         "instruction_overrides": instruction_overrides,
         "authority_overrides": authority_overrides,
         "outlier_clauses": outlier_clauses,
-        "bow_malicious": bow_malicious,
+        "rf_malicious": rf_malicious,
     })
     llm_skipped = skip_threshold is not None and score >= skip_threshold
 
@@ -119,7 +131,7 @@ def process_single(prompt, data, patterns=Patterns, skip_threshold=SKIP_LLM_THRE
         outlier_clauses=outlier_clauses,
         instruction_overrides=instruction_overrides,
         authority_overrides=authority_overrides,
-        bow_malicious=bow_malicious,
+        bow_malicious=[],
         standalone=full_sentence_detections,
         embedded=embedded_detections,
         unsanitized_output=unsanitized_output,
@@ -128,4 +140,5 @@ def process_single(prompt, data, patterns=Patterns, skip_threshold=SKIP_LLM_THRE
         sanitized_valid=sanitized_valid,
         cheap_score=score,
         llm_skipped=llm_skipped,
+        rf_malicious=rf_malicious,
     )

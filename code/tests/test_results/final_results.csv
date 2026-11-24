@@ -1,0 +1,41 @@
+group,method,n,tp,fp,tn,fn,accuracy,precision,recall,fpr,f1
+All realistic sets (holdout + Hugging Face + resumes),Random Forest,2540,305,0,1861,374,0.852755905511811,1.0,0.4491899852724595,0.0,0.6199186991869918
+All realistic sets (holdout + Hugging Face + resumes),Instruction regex,2540,77,0,1861,602,0.7629921259842519,1.0,0.1134020618556701,0.0,0.2037037037037037
+All realistic sets (holdout + Hugging Face + resumes),Authority regex,2540,60,52,1809,619,0.7358267716535433,0.5357142857142857,0.08836524300441827,0.027941966684578184,0.15170670037926676
+All realistic sets (holdout + Hugging Face + resumes),LLM output check,200,20,16,118,46,0.69,0.5555555555555556,0.30303030303030304,0.11940298507462686,0.39215686274509803
+All realistic sets (holdout + Hugging Face + resumes),Old rule: any detector fires,2540,349,52,1809,330,0.8496062992125984,0.8703241895261845,0.5139911634756995,0.027941966684578184,0.6462962962962963
+All realistic sets (holdout + Hugging Face + resumes),Old rule + LLM check,200,34,19,115,32,0.745,0.6415094339622641,0.5151515151515151,0.1417910447761194,0.5714285714285714
+All realistic sets (holdout + Hugging Face + resumes),"Weighted pipeline, detectors only",2540,315,0,1861,364,0.8566929133858268,1.0,0.4639175257731959,0.0,0.6338028169014085
+All realistic sets (holdout + Hugging Face + resumes),"Weighted pipeline, full (with LLM check)",200,18,0,134,48,0.76,1.0,0.2727272727272727,0.0,0.42857142857142855
+datasetv2_holdout,Random Forest,2400,305,0,1769,326,0.8641666666666666,1.0,0.48335974643423135,0.0,0.6517094017094017
+datasetv2_holdout,Instruction regex,2400,67,0,1769,564,0.765,1.0,0.10618066561014262,0.0,0.19197707736389685
+datasetv2_holdout,Authority regex,2400,58,50,1719,573,0.7404166666666666,0.5370370370370371,0.0919175911251981,0.02826455624646693,0.15696887686062247
+datasetv2_holdout,LLM output check,60,4,10,32,14,0.6,0.2857142857142857,0.2222222222222222,0.23809523809523808,0.25
+datasetv2_holdout,Old rule: any detector fires,2400,338,50,1719,293,0.8570833333333333,0.8711340206185567,0.5356576862123613,0.02826455624646693,0.6633954857703631
+datasetv2_holdout,Old rule + LLM check,60,10,11,31,8,0.6833333333333333,0.47619047619047616,0.5555555555555556,0.2619047619047619,0.5128205128205128
+datasetv2_holdout,"Weighted pipeline, detectors only",2400,305,0,1769,326,0.8641666666666666,1.0,0.48335974643423135,0.0,0.6517094017094017
+datasetv2_holdout,"Weighted pipeline, full (with LLM check)",60,8,0,42,10,0.8333333333333334,1.0,0.4444444444444444,0.0,0.6153846153846154
+hugging_face_prompts,Random Forest,40,0,0,18,22,0.45,,0.0,0.0,0.0
+hugging_face_prompts,Instruction regex,40,5,0,18,17,0.575,1.0,0.22727272727272727,0.0,0.37037037037037035
+hugging_face_prompts,Authority regex,40,2,2,16,20,0.45,0.5,0.09090909090909091,0.1111111111111111,0.15384615384615385
+hugging_face_prompts,LLM output check,40,13,5,13,9,0.65,0.7222222222222222,0.5909090909090909,0.2777777777777778,0.65
+hugging_face_prompts,Old rule: any detector fires,40,6,2,16,16,0.55,0.75,0.2727272727272727,0.1111111111111111,0.4
+hugging_face_prompts,Old rule + LLM check,40,17,7,11,5,0.7,0.7083333333333334,0.7727272727272727,0.3888888888888889,0.7391304347826086
+hugging_face_prompts,"Weighted pipeline, detectors only",40,5,0,18,17,0.575,1.0,0.22727272727272727,0.0,0.37037037037037035
+hugging_face_prompts,"Weighted pipeline, full (with LLM check)",40,5,0,18,17,0.575,1.0,0.22727272727272727,0.0,0.37037037037037035
+resumes_half_pi,Random Forest,50,0,0,24,26,0.48,,0.0,0.0,0.0
+resumes_half_pi,Instruction regex,50,5,0,24,21,0.58,1.0,0.19230769230769232,0.0,0.3225806451612903
+resumes_half_pi,Authority regex,50,0,0,24,26,0.48,,0.0,0.0,0.0
+resumes_half_pi,LLM output check,50,3,0,24,23,0.54,1.0,0.11538461538461539,0.0,0.20689655172413793
+resumes_half_pi,Old rule: any detector fires,50,5,0,24,21,0.58,1.0,0.19230769230769232,0.0,0.3225806451612903
+resumes_half_pi,Old rule + LLM check,50,7,0,24,19,0.62,1.0,0.2692307692307692,0.0,0.42424242424242425
+resumes_half_pi,"Weighted pipeline, detectors only",50,5,0,24,21,0.58,1.0,0.19230769230769232,0.0,0.3225806451612903
+resumes_half_pi,"Weighted pipeline, full (with LLM check)",50,5,0,24,21,0.58,1.0,0.19230769230769232,0.0,0.3225806451612903
+resumes_all_benign,Random Forest,50,0,0,50,0,1.0,,,0.0,
+resumes_all_benign,Instruction regex,50,0,0,50,0,1.0,,,0.0,
+resumes_all_benign,Authority regex,50,0,0,50,0,1.0,,,0.0,
+resumes_all_benign,LLM output check,50,0,1,49,0,0.98,0.0,,0.02,0.0
+resumes_all_benign,Old rule: any detector fires,50,0,0,50,0,1.0,,,0.0,
+resumes_all_benign,Old rule + LLM check,50,0,1,49,0,0.98,0.0,,0.02,0.0
+resumes_all_benign,"Weighted pipeline, detectors only",50,0,0,50,0,1.0,,,0.0,
+resumes_all_benign,"Weighted pipeline, full (with LLM check)",50,0,0,50,0,1.0,,,0.0,

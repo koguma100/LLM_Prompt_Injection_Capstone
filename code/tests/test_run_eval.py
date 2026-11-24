@@ -12,7 +12,7 @@ DATA = [(f"sample text {i}", i % 2) for i in range(1, 7)]
 
 def fake_result(prompt, text, patterns=None, **kwargs):
     return Result(prompt=prompt, original=text, sanitized=text, outlier_clauses=[], instruction_overrides=[],
-                  authority_overrides=[], bow_malicious=["x"] if text.endswith(("1", "3", "5")) else [],
+                  authority_overrides=[], bow_malicious=[], rf_malicious=["x"] if text.endswith(("1", "3", "5")) else [],
                   standalone=[], embedded=[], unsanitized_output="a", sanitized_output="b",
                   unsanitized_valid=True, sanitized_valid=True)
 
@@ -100,7 +100,7 @@ def test_without_resume_starts_over(tmp_path):
 
 def skipped_result(prompt, text, patterns=None, **kwargs):
     return Result(prompt=prompt, original=text, sanitized=text, outlier_clauses=[], instruction_overrides=["i"],
-                  authority_overrides=[], bow_malicious=["x"], standalone=[], embedded=[], unsanitized_output=None,
+                  authority_overrides=[], bow_malicious=[], rf_malicious=["x"], standalone=[], embedded=[], unsanitized_output=None,
                   sanitized_output=None, unsanitized_valid=None, sanitized_valid=None, cheap_score=2.0, llm_skipped=True)
 
 def test_skipped_samples_are_saved_and_resumed(tmp_path):

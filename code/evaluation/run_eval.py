@@ -65,8 +65,8 @@ def print_result(result):
         print("    Instruction override matches (regex):", result.instruction_overrides)
     if result.authority_overrides:
         print("    Authority override matches (regex):", result.authority_overrides)
-    if result.bow_malicious:
-        print("    Malicious sentences (BoW model):", result.bow_malicious)
+    if result.rf_malicious:
+        print("    Malicious sentences (Random Forest model):", result.rf_malicious)
     if not result.detections:
         print("    No prompt injections detected")
     if result.standalone:
